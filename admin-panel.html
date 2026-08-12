@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - จัดการเรื่องร้องเรียน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Prompt', sans-serif; }</style>
+</head>
+<body class="bg-slate-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">🛠️ แผงควบคุมเจ้าหน้าที่ (Admin Panel)</h1>
+                <p class="text-sm text-slate-500">จัดการและปิดงานเรื่องร้องเรียนที่ค้างอยู่</p>
+            </div>
+            <div class="space-x-2">
+                <a href="dashboard.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">ไปหน้า Dashboard ติดตามงาน</a>
+                <a href="resolved-dashboard.html" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-emerald-700">ไปหน้าผลงานที่เสร็จแล้ว</a>
+            </div>
+        </div>
+
+        <div id="pendingList" class="space-y-4">
+            <p class="text-center text-slate-400 py-10">กำลังโหลดข้อมูล...</p>
+        </div>
+    </div>
+
+    <!-- Modal สำหรับกรอกข้อมูลปิดงาน -->
+    <div id="resolveModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">📝 บันทึกผลการดำเนินงานแก้ไข</h3>
+            <input type="hidden" id="currentComplaintId">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">รายละเอียดการแก้ไข / สรุปผล *</label>
+                    <textarea id="resolutionNote" rows="3" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="เช่น ดำเนินการซ่อมแซมท่อประปา เปลี่ยนข้อต่อใหม่เรียบร้อยแล้ว"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">แนบรูปภาพหลังแก้ไขเสร็จ *</label>
+                    <input type="file" id="resolutionImage" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 text-sm">ยกเลิก</button>
+                <button onclick="submitResolution()" id="submitResolveBtn" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">ยืนยันการปิดงาน</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://idgojpyhowjjphhanljt.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function fetchPendingComplaints() {
+            const { data, error } = await _supabase
+                .from('complaints')
+                .select('*')
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false });
+
+            const listContainer = document.getElementById('pendingList');
+            if (error || !data.length) {
+                listContainer.innerHTML = '<p class="text-center text-slate-400 py-10 bg-white rounded-xl shadow-sm">ไม่มีเรื่องร้องเรียนที่ค้างดำเนินการ</p>';
+                return;
+            }
+
+            listContainer.innerHTML = data.map(item => `
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="space-y-1">
+                        <span class="px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">${item.category || 'ทั่วไป'}</span>
+                        <h3 class="font-bold text-slate-800 text-lg">${item.title}</h3>
+                        <p class="text-sm text-slate-600">${item.description || 'ไม่มีรายละเอียด'}</p>
+                        <p class="text-xs text-slate-400">ผู้แจ้ง: ${item.reporter_name || 'ไม่ระบุ'} | แจ้งเมื่อ: ${new Date(item.created_at).toLocaleString('th-TH')}</p>
+                    </div>
+                    ${item.image_url ? `<img src="${item.image_url}" class="w-24 h-24 object-cover rounded-lg border">` : ''}
+                    <button onclick="openModal('${item.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition shadow-sm whitespace-nowrap">
+                        ✅ ดำเนินการเสร็จสิ้น (ปิดงาน)
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function openModal(id) {
+            document.getElementById('currentComplaintId').value = id;
+            document.getElementById('resolutionNote').value = '';
+            document.getElementById('resolutionImage').value = '';
+            document.getElementById('resolveModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('resolveModal').classList.add('hidden');
+        }
+
+        async function submitResolution() {
+            const id = document.getElementById('currentComplaintId').value;
+            const note = document.getElementById('resolutionNote').value;
+            const fileInput = document.getElementById('resolutionImage');
+
+            if (!note) {
+                alert('กรุณากรอกรายละเอียดการดำเนินงาน');
+                return;
+            }
+
+            const btn = document.getElementById('submitResolveBtn');
+            btn.disabled = true;
+            btn.textContent = 'กำลังบันทึก...';
+
+            try {
+                let resolutionImageUrl = null;
+
+                // ถ้ามีการแนบรูปปิดงาน ให้ส่งเข้า Supabase Storage
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `resolved_${Date.now()}.${fileExt}`;
+                    
+                    const { error: uploadError } = await _supabase.storage
+                        .from('complaint-images')
+                        .upload(fileName, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: publicURLData } = _supabase.storage
+                        .from('complaint-images')
+                        .getPublicUrl(fileName);
+
+                    resolutionImageUrl = publicURLData.publicUrl;
+                }
+
+                // อัปเดตข้อมูลสถานะเป็น resolved ในตาราง complaints
+                const { error: updateError } = await _supabase
+                    .from('complaints')
+                    .update({
+                        status: 'resolved',
+                        resolution_note: note,
+                        resolution_image_url: resolutionImageUrl,
+                        resolved_at: new Date().toISOString()
+                    })
+                    .eq('id', id);
+
+                if (updateError) throw updateError;
+
+                alert('ปิดงานสำเร็จเรียบร้อยครับ!');
+                closeModal();
+                fetchPendingComplaints();
+
+            } catch (err) {
+                console.error(err);
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'ยืนยันการปิดงาน';
+            }
+        }
+
+        fetchPendingComplaints();
+    </script>
+</body>
+</html>
