@@ -40,12 +40,42 @@
         </div>
     </div>
 
+    <!-- Modal สำหรับประเมินความพึงพอใจ -->
+    <div id="ratingModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 class="text-lg font-bold text-slate-800 text-center">⭐ ประเมินความพึงพอใจ</h3>
+            <p class="text-xs text-slate-500 text-center">โปรดให้คะแนนการดำเนินงานของเจ้าหน้าที่</p>
+            
+            <input type="hidden" id="ratingComplaintId">
+            <input type="hidden" id="selectedScore" value="5">
+
+            <!-- ส่วนกดเลือกดาว -->
+            <div class="flex justify-center gap-2 py-2" id="starContainer">
+                <button type="button" onclick="setRating(1)" class="text-3xl text-amber-400 focus:outline-none">★</button>
+                <button type="button" onclick="setRating(2)" class="text-3xl text-amber-400 focus:outline-none">★</button>
+                <button type="button" onclick="setRating(3)" class="text-3xl text-amber-400 focus:outline-none">★</button>
+                <button type="button" onclick="setRating(4)" class="text-3xl text-amber-400 focus:outline-none">★</button>
+                <button type="button" onclick="setRating(5)" class="text-3xl text-amber-400 focus:outline-none">★</button>
+            </div>
+            <p id="ratingText" class="text-center text-xs font-semibold text-amber-600">ดีเยี่ยม (5 ดาว)</p>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">คำแนะนำเพิ่มเติม (ถ้ามี)</label>
+                <textarea id="ratingComment" rows="3" class="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="เขียนคำแนะนำหรือติชมการทำงาน..."></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeRatingModal()" class="px-4 py-2 text-xs font-medium bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl transition">ยกเลิก</button>
+                <button onclick="submitRating()" class="px-4 py-2 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition">ส่งผลประเมิน</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://idgojpyhowjjphhanljt.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ฟังก์ชันแปลงรูปแบบวันที่ให้เป็นไทย
         function formatDateOnly(dateString) {
             if (!dateString) return '-';
             const date = new Date(dateString);
@@ -56,7 +86,6 @@
             });
         }
 
-        // ฟังก์ชันค้นหาคำร้องตามเบอร์โทรศัพท์ (reporter_phone)
         async function trackComplaint() {
             const phone = document.getElementById('phoneInput').value.trim();
             const resultArea = document.getElementById('resultArea');
@@ -90,12 +119,34 @@
                 return;
             }
 
-            // แสดงรายการที่ค้นพบทั้งหมด
             resultArea.innerHTML = data.map(item => {
                 const isResolved = item.status === 'resolved';
                 const statusBadge = isResolved 
                     ? '<span class="px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full">✅ ดำเนินการแล้วเสร็จ</span>'
                     : '<span class="px-3 py-1 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">⏳ อยู่ระหว่างการดำเนินงาน</span>';
+
+                let ratingSection = '';
+                if (isResolved) {
+                    if (item.satisfaction_score) {
+                        const stars = '★'.repeat(item.satisfaction_score) + '☆'.repeat(5 - item.satisfaction_score);
+                        ratingSection = `
+                            <div class="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-1">
+                                <p class="text-xs font-bold text-amber-800">⭐ ผลการประเมินความพึงพอใจของคุณ:</p>
+                                <div class="text-amber-500 text-base">${stars} (${item.satisfaction_score}/5 ดาว)</div>
+                                ${item.satisfaction_comment ? `<p class="text-xs text-slate-600 mt-1">คำแนะนำ: "${item.satisfaction_comment}"</p>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        ratingSection = `
+                            <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+                                <span class="text-xs text-slate-500">งานนี้เสร็จเรียบร้อยแล้ว คุณพึงพอใจแค่ไหน?</span>
+                                <button onclick="openRatingModal('${item.id}')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium py-1.5 px-4 rounded-xl transition shadow-sm">
+                                    ⭐ ประเมินความพึงพอใจ
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
 
                 return `
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
@@ -113,7 +164,6 @@
                             <p class="text-xs text-slate-400 mt-2">📍 พิกัด: ${item.latitude || '-'}, ${item.longitude || '-'}</p>
                         </div>
 
-                        <!-- ส่วนแสดงผลการดำเนินงาน (กรณีที่ปิดงานแล้ว) -->
                         ${isResolved ? `
                             <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1">
                                 <p class="text-xs font-bold text-emerald-800">📌 ผลการจัดการ (ปิดงานเมื่อ ${formatDateOnly(item.resolved_at)}):</p>
@@ -121,20 +171,80 @@
                             </div>
                         ` : ''}
 
-                        <!-- รูปภาพประกอบ (ถ้ามี) -->
+                        <!-- รูปภาพประกอบ (เปลี่ยนข้อความตามที่ขอ) -->
                         <div class="grid grid-cols-2 gap-3 pt-2">
                             <div>
                                 <p class="text-[10px] text-slate-400 mb-1">รูปภาพตอนแจ้งเรื่อง</p>
                                 ${item.image_url ? `<img src="${item.image_url}" class="w-full h-32 object-cover rounded-xl border">` : '<div class="w-full h-32 bg-slate-50 rounded-xl border flex items-center justify-center text-xs text-slate-400">ไม่มีรูปภาพ</div>'}
                             </div>
                             <div>
-                                <p class="text-[10px] text-emerald-600 font-semibold mb-1">รูปภาพหลังซ่อมเสร็จ</p>
+                                <p class="text-[10px] text-emerald-600 font-semibold mb-1">รูปภาพหลังดำเนินการ</p>
                                 ${item.resolution_image_url ? `<img src="${item.resolution_image_url}" class="w-full h-32 object-cover rounded-xl border border-emerald-200">` : '<div class="w-full h-32 bg-slate-50 rounded-xl border flex items-center justify-center text-xs text-slate-400">ยังไม่มีรูปภาพ</div>'}
                             </div>
                         </div>
+
+                        <!-- ส่วนประเมินความพึงพอใจ -->
+                        ${ratingSection}
                     </div>
                 `;
             }).join('');
+        }
+
+        // จัดการระบบ Modal ประเมินดาว
+        function openRatingModal(id) {
+            document.getElementById('ratingComplaintId').value = id;
+            document.getElementById('ratingComment').value = '';
+            setRating(5); // ค่าเริ่มต้น 5 ดาว
+            document.getElementById('ratingModal').classList.remove('hidden');
+        }
+
+        function closeRatingModal() {
+            document.getElementById('ratingModal').classList.add('hidden');
+        }
+
+        function setRating(score) {
+            document.getElementById('selectedScore').value = score;
+            const buttons = document.querySelectorAll('#starContainer button');
+            buttons.forEach((btn, index) => {
+                if (index < score) {
+                    btn.classList.remove('text-slate-300');
+                    btn.classList.add('text-amber-400');
+                } else {
+                    btn.classList.remove('text-amber-400');
+                    btn.classList.add('text-slate-300');
+                }
+            });
+
+            const texts = {
+                1: 'ต้องปรับปรุง (1 ดาว)',
+                2: 'พอใช้ (2 ดาว)',
+                3: 'ปานกลาง (3 ดาว)',
+                4: 'ดี (4 ดาว)',
+                5: 'ดีเยี่ยม (5 ดาว)'
+            };
+            document.getElementById('ratingText').textContent = texts[score];
+        }
+
+        async function submitRating() {
+            const id = document.getElementById('ratingComplaintId').value;
+            const score = parseInt(document.getElementById('selectedScore').value);
+            const comment = document.getElementById('ratingComment').value.trim();
+
+            const { error } = await _supabase
+                .from('complaints')
+                .update({
+                    satisfaction_score: score,
+                    satisfaction_comment: comment
+                })
+                .eq('id', id);
+
+            if (error) {
+                alert('เกิดข้อผิดพลาดในการบันทึกผลประเมิน: ' + error.message);
+            } else {
+                alert('ขอบคุณสำหรับการประเมินความพึงพอใจครับ!');
+                closeRatingModal();
+                trackComplaint(); // โหลดข้อมูลใหม่เพื่อแสดงผลดาวที่กดแล้ว
+            }
         }
     </script>
 </body>
