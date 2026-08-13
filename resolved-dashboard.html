@@ -31,24 +31,35 @@
         <!-- กล่องเครื่องมือกรองข้อมูลและเปลี่ยนมุมมองแบบปุ่ม Tab -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6 space-y-4">
             
-            <!-- แถบปุ่มเลือกมุมมองแบบ Tab -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-2">เลือกมุมมองรายงาน</label>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="setViewMode('resolved')" id="btn-resolved" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-blue-600 text-white shadow-sm">
-                        ✅ เรื่องร้องเรียนที่ปิดงานแล้ว
-                    </button>
-                    <button onclick="setViewMode('pending')" id="btn-pending" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
-                        ⏳ เรื่องร้องเรียนที่ยังไม่ปิดงาน
-                    </button>
-                    <button onclick="setViewMode('all')" id="btn-all" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
-                        📂 เรื่องร้องเรียนทั้งหมด
-                    </button>
+            <!-- แถบปุ่มเลือกมุมมองแบบ Tab และช่องค้นหา ให้อยู่บรรทัดเดียวกัน -->
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
+                <div class="w-full lg:w-auto">
+                    <label class="block text-xs font-semibold text-slate-600 mb-2">เลือกมุมมองรายงาน</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setViewMode('resolved')" id="btn-resolved" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-blue-600 text-white shadow-sm">
+                            ✅ เรื่องร้องเรียนที่ปิดงานแล้ว
+                        </button>
+                        <button onclick="setViewMode('pending')" id="btn-pending" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                            ⏳ เรื่องร้องเรียนที่ยังไม่ปิดงาน
+                        </button>
+                        <button onclick="setViewMode('all')" id="btn-all" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                            📂 เรื่องร้องเรียนทั้งหมด
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ช่องค้นหาแบบกระชับ (วางบรรทัดเดียวกันทางขวา) -->
+                <div class="w-full lg:w-72">
+                    <label class="block text-xs font-semibold text-slate-600 mb-2">ค้นหาคำร้อง</label>
+                    <div class="relative">
+                        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="พิมพ์ค้นหา (เช่น หมา, ไฟฟ้า)..." class="w-full px-3.5 py-2 pl-9 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+                    </div>
                 </div>
             </div>
 
             <!-- ส่วนกรองวันที่และปุ่มค้นหา -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end pt-2 border-t border-slate-100">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end pt-3 border-t border-slate-100">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">ประเภทการกรองวันที่</label>
                     <select id="dateType" class="w-full px-3 py-2 text-sm border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -93,7 +104,7 @@
         </div>
     </div>
 
-    <!-- ส่วนสำหรับแปลงร่างเป็น PDF (ปรับขยายช่อง ผลการจัดการ และ รายละเอียด ให้กว้างเป็นพิเศษ) -->
+    <!-- ส่วนสำหรับแปลงร่างเป็น PDF -->
     <div style="display: none;">
         <div id="pdfReportContent" style="padding: 10px; font-family: 'Tahoma', sans-serif; color: #000; background: #fff; width: 100%;">
             <div style="text-align: center; margin-bottom: 12px;">
@@ -173,6 +184,7 @@
             const dateType = document.getElementById('dateType').value;
             const startDateVal = document.getElementById('startDate').value;
             const endDateVal = document.getElementById('endDate').value;
+            const searchKeyword = document.getElementById('searchInput').value.toLowerCase().trim();
 
             let filtered = allMasterData;
 
@@ -180,6 +192,22 @@
                 filtered = filtered.filter(item => item.status === 'resolved');
             } else if (currentViewMode === 'pending') {
                 filtered = filtered.filter(item => item.status !== 'resolved');
+            }
+
+            if (searchKeyword) {
+                filtered = filtered.filter(item => {
+                    const title = (item.title || '').toLowerCase();
+                    const desc = (item.description || '').toLowerCase();
+                    const category = (item.category || '').toLowerCase();
+                    const reporterName = (item.reporter_name || '').toLowerCase();
+                    const reporterPhone = (item.reporter_phone || '').toLowerCase();
+
+                    return title.includes(searchKeyword) || 
+                           desc.includes(searchKeyword) || 
+                           category.includes(searchKeyword) || 
+                           reporterName.includes(searchKeyword) || 
+                           reporterPhone.includes(searchKeyword);
+                });
             }
 
             if (startDateVal || endDateVal) {
@@ -258,6 +286,7 @@
 
         function resetFilter() {
             setViewMode('resolved');
+            document.getElementById('searchInput').value = '';
             document.getElementById('dateType').value = 'created_at';
             document.getElementById('startDate').value = '';
             document.getElementById('endDate').value = '';
