@@ -14,7 +14,7 @@
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800">🛠️ แผงควบคุมเจ้าหน้าที่ (Admin Panel)</h1>
-                <p class="text-sm text-slate-500">จัดการและปิดงานเรื่องร้องเรียนที่ค้างอยู่</p>
+                <p class="text-sm text-slate-500">จัดการและปิดงานเรื่องร้องเรียนที่ค้างอยู่ตามหน่วยงานรับผิดชอบ</p>
             </div>
             <div class="space-x-2">
                 <a href="dashboard.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">Dashboard</a>
@@ -22,12 +22,12 @@
             </div>
         </div>
 
-        <!-- แถบกรองข้อมูลตาม Tag ที่ครบถ้วน 12 หน่วยงาน -->
+        <!-- แถบกรองข้อมูลตาม Tag ครบถ้วนทุกหน่วยงาน -->
         <div class="mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <label class="block text-sm font-medium text-slate-700 mb-2">กรองตามหน่วยงานรับผิดชอบ:</label>
-            <select id="tagFilter" onchange="filterByTag()" class="w-full md:w-72 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="all">ทั้งหมด</option>
-                <option value="untagged">ยังไม่ได้ติด Tag (รอจ่ายงาน)</option>
+            <label class="block text-sm font-medium text-slate-700 mb-2">🔍 กรองตามหน่วยงานรับผิดชอบ:</label>
+            <select id="tagFilter" onchange="filterByTag()" class="w-full md:w-80 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm font-medium text-slate-700">
+                <option value="all">ทั้งหมดทุกหน่วยงาน</option>
+                <option value="untagged">⚠️ ยังไม่ได้ติด Tag (รอจ่ายงาน)</option>
                 <optgroup label="รายชื่อกอง/ฝ่ายทั้งหมด">
                     <option value="สำนักปลัดเทศบาล">สำนักปลัดเทศบาล</option>
                     <option value="กองคลัง">กองคลัง</option>
@@ -39,8 +39,9 @@
                     <option value="กองช่างสุขา">กองช่างสุขา</option>
                     <option value="กองการศึกษา">กองการศึกษา</option>
                     <option value="กลุ่มงานป้องกันฯ">กลุ่มงานป้องกันฯ</option>
-                    <option value="งานนิตการ">งานนิตการ</option>
+                    <option value="งานนิติการ">งานนิติการ</option>
                     <option value="สำนักทะเบียน">สำนักทะเบียน</option>
+                    <option value="พื้นที่นอกเขตรับผิดชอบ">พื้นที่นอกเขตรับผิดชอบ</option>
                 </optgroup>
             </select>
         </div>
@@ -81,8 +82,11 @@
 
         async function fetchComplaints() {
             const { data, error } = await _supabase.from('complaints').select('*').eq('status', 'pending').order('created_at', { ascending: false });
-            if (error) return;
-            allData = data;
+            if (error) {
+                console.error(error);
+                return;
+            }
+            allData = data || [];
             renderList(allData);
         }
 
@@ -94,19 +98,20 @@
             }
 
             listContainer.innerHTML = data.map(item => {
-                const tags = item.department_tags ? item.department_tags.split(',').map(t => t.trim()) : [];
+                const tags = item.department_tags ? item.department_tags.split(',').map(t => t.trim()).filter(t => t) : [];
                 const tagsHtml = tags.length > 0 
-                    ? tags.map(t => `<span class="px-2 py-1 text-[10px] font-bold bg-blue-100 text-blue-700 rounded-md border border-blue-200">📌 ${t}</span>`).join(' ')
-                    : '<span class="text-[10px] text-red-500 font-bold bg-red-50 px-2 py-1 rounded-md">⚠️ ยังไม่ได้ระบุหน่วยงาน</span>';
+                    ? tags.map(t => `<span class="px-2.5 py-1 text-[11px] font-bold bg-blue-100 text-blue-700 rounded-md border border-blue-200">📌 ${t}</span>`).join(' ')
+                    : '<span class="text-[11px] text-red-500 font-bold bg-red-50 px-2.5 py-1 rounded-md border border-red-200">⚠️ ยังไม่ได้ระบุหน่วยงาน</span>';
 
                 return `
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div class="space-y-1">
+                        <div class="space-y-1.5 flex-1">
                             <div class="flex gap-2 items-center flex-wrap">
                                 <span class="px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">${item.category || 'ทั่วไป'}</span>
                                 ${tagsHtml}
                             </div>
                             <h3 class="font-bold text-slate-800 text-lg">${item.title}</h3>
+                            <p class="text-xs text-slate-500">${item.description || '-'}</p>
                             <p class="text-xs text-slate-400">ผู้แจ้ง: ${item.reporter_name || 'ไม่ระบุ'} | แจ้งเมื่อ: ${new Date(item.created_at).toLocaleString('th-TH')}</p>
                         </div>
                         <button onclick="openModal('${item.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition shadow-sm whitespace-nowrap">
@@ -119,24 +124,37 @@
 
         function filterByTag() {
             const filterValue = document.getElementById('tagFilter').value;
-            if (filterValue === 'all') return renderList(allData);
-            if (filterValue === 'untagged') return renderList(allData.filter(i => !i.department_tags || i.department_tags.trim() === ""));
-            renderList(allData.filter(i => i.department_tags && i.department_tags.includes(filterValue)));
+            if (filterValue === 'all') {
+                renderList(allData);
+            } else if (filterValue === 'untagged') {
+                renderList(allData.filter(i => !i.department_tags || i.department_tags.trim() === ""));
+            } else {
+                renderList(allData.filter(i => i.department_tags && i.department_tags.includes(filterValue)));
+            }
         }
 
         function openModal(id) {
             document.getElementById('currentComplaintId').value = id;
+            document.getElementById('resolutionNote').value = '';
+            document.getElementById('resolutionImage').value = '';
             document.getElementById('resolveModal').classList.remove('hidden');
         }
 
-        function closeModal() { document.getElementById('resolveModal').classList.add('hidden'); }
+        function closeModal() { 
+            document.getElementById('resolveModal').classList.add('hidden'); 
+        }
 
         async function submitResolution() {
             const id = document.getElementById('currentComplaintId').value;
             const note = document.getElementById('resolutionNote').value;
             if (!note) return alert('กรุณากรอกรายละเอียดการแก้ไข');
             
-            const { error } = await _supabase.from('complaints').update({ status: 'resolved', resolution_note: note, resolved_at: new Date().toISOString() }).eq('id', id);
+            const { error } = await _supabase.from('complaints').update({ 
+                status: 'resolved', 
+                resolution_note: note, 
+                resolved_at: new Date().toISOString() 
+            }).eq('id', id);
+
             if (error) return alert("บันทึกพลาด: " + error.message);
             alert('ปิดงานเรียบร้อย');
             closeModal();
