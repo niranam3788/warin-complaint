@@ -58,11 +58,33 @@
                 </div>
             </div>
 
-            <!-- ส่วนกรองวันที่และปุ่มค้นหา -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end pt-3 border-t border-slate-100">
+            <!-- ส่วนกรองหน่วยงาน (Tag Filter) และวันที่ -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end pt-3 border-t border-slate-100">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">🏢 กรองตามหน่วยงานรับผิดชอบ</label>
+                    <select id="tagFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 font-medium">
+                        <option value="all">ทุกหน่วยงาน</option>
+                        <option value="untagged">⚠️ ยังไม่ระบุหน่วยงาน</option>
+                        <optgroup label="รายชื่อกอง/ฝ่ายทั้งหมด">
+                            <option value="สำนักปลัดเทศบาล">สำนักปลัดเทศบาล</option>
+                            <option value="กองคลัง">กองคลัง</option>
+                            <option value="กองยุทธศาสตร์ฯ">กองยุทธศาสตร์ฯ</option>
+                            <option value="กองสาธารณสุขฯ">กองสาธารณสุขฯ</option>
+                            <option value="กองสวัสดิการสังคม">กองสวัสดิการสังคม</option>
+                            <option value="กองการเจ้าหน้าที่">กองการเจ้าหน้าที่</option>
+                            <option value="กองช่าง">กองช่าง</option>
+                            <option value="กองช่างสุขา">กองช่างสุขา</option>
+                            <option value="กองการศึกษา">กองการศึกษา</option>
+                            <option value="กลุ่มงานป้องกันฯ">กลุ่มงานป้องกันฯ</option>
+                            <option value="งานนิติการ">งานนิติการ</option>
+                            <option value="สำนักทะเบียน">สำนักทะเบียน</option>
+                            <option value="พื้นที่นอกเขตรับผิดชอบ">พื้นที่นอกเขตรับผิดชอบ</option>
+                        </optgroup>
+                    </select>
+                </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">ประเภทการกรองวันที่</label>
-                    <select id="dateType" class="w-full px-3 py-2 text-sm border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="dateType" class="w-full px-3 py-2 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="created_at">กรองตามวันที่แจ้งเรื่อง</option>
                         <option value="resolved_at">กรองตามวันที่ปิดงานเสร็จ</option>
                     </select>
@@ -75,10 +97,10 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="applyFilters()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm py-2 px-4 rounded-xl transition shadow-sm">
-                        🔍 กรองข้อมูล
+                    <button onclick="applyFilters()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs py-2 px-3 rounded-xl transition shadow-sm">
+                        🔍 กรอง
                     </button>
-                    <button onclick="resetFilter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium text-sm py-2 px-3 rounded-xl transition">
+                    <button onclick="resetFilter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium text-xs py-2 px-3 rounded-xl transition">
                         ล้างค่า
                     </button>
                 </div>
@@ -115,12 +137,13 @@
                 <thead>
                     <tr style="background-color: #e2e8f0;">
                         <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 4%;">ที่</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 9%;">วันที่แจ้ง</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 14%;">หัวข้อ</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 23%;">รายละเอียด</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 11%;">พิกัด</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 29%;">ผลการจัดการ</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 10%;">วันที่เสร็จ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 8%;">วันที่แจ้ง</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 13%;">หัวข้อ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 20%;">รายละเอียด</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 13%;">หน่วยงานรับผิดชอบ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 24%;">ผลการจัดการ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 9%;">วันที่เสร็จ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 9%;">พิกัด</th>
                     </tr>
                 </thead>
                 <tbody id="pdfTableBody">
@@ -185,15 +208,25 @@
             const startDateVal = document.getElementById('startDate').value;
             const endDateVal = document.getElementById('endDate').value;
             const searchKeyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            const tagFilterVal = document.getElementById('tagFilter').value;
 
             let filtered = allMasterData;
 
+            // กรองสถานะ Tab
             if (currentViewMode === 'resolved') {
                 filtered = filtered.filter(item => item.status === 'resolved');
             } else if (currentViewMode === 'pending') {
                 filtered = filtered.filter(item => item.status !== 'resolved');
             }
 
+            // กรองตาม Tag หน่วยงาน
+            if (tagFilterVal === 'untagged') {
+                filtered = filtered.filter(item => !item.department_tags || item.department_tags.trim() === '');
+            } else if (tagFilterVal !== 'all') {
+                filtered = filtered.filter(item => item.department_tags && item.department_tags.includes(tagFilterVal));
+            }
+
+            // กรองคำค้นหา
             if (searchKeyword) {
                 filtered = filtered.filter(item => {
                     const title = (item.title || '').toLowerCase();
@@ -201,15 +234,18 @@
                     const category = (item.category || '').toLowerCase();
                     const reporterName = (item.reporter_name || '').toLowerCase();
                     const reporterPhone = (item.reporter_phone || '').toLowerCase();
+                    const tags = (item.department_tags || '').toLowerCase();
 
                     return title.includes(searchKeyword) || 
                            desc.includes(searchKeyword) || 
                            category.includes(searchKeyword) || 
                            reporterName.includes(searchKeyword) || 
-                           reporterPhone.includes(searchKeyword);
+                           reporterPhone.includes(searchKeyword) ||
+                           tags.includes(searchKeyword);
                 });
             }
 
+            // กรองช่วงเวลา
             if (startDateVal || endDateVal) {
                 filtered = filtered.filter(item => {
                     const targetDateStr = item[dateType] ? item[dateType].split('T')[0] : '';
@@ -245,12 +281,20 @@
                     ? '<span class="px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full">ปิดงานแล้ว</span>'
                     : '<span class="px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">รอดำเนินการ</span>';
 
+                const tags = item.department_tags ? item.department_tags.split(',').map(t => t.trim()).filter(t => t) : [];
+                const tagsHtml = tags.length > 0 
+                    ? tags.map(t => `<span class="px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-700 rounded border border-blue-200">📌 ${t}</span>`).join(' ')
+                    : '<span class="text-[10px] text-red-500 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">⚠️ ยังไม่ระบุหน่วยงาน</span>';
+
                 return `
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between">
                         <div class="p-5">
                             <div class="flex justify-between items-center mb-2">
                                 ${statusBadge}
                                 <span class="text-xs text-slate-400">แจ้งเมื่อ: ${formatDateOnly(item.created_at)}</span>
+                            </div>
+                            <div class="flex gap-1.5 flex-wrap mb-2">
+                                ${tagsHtml}
                             </div>
                             <h3 class="font-bold text-slate-800 text-base">${item.title}</h3>
                             <p class="text-xs text-slate-500 mt-1">หมวดหมู่: ${item.category || '-'}</p>
@@ -286,6 +330,7 @@
 
         function resetFilter() {
             setViewMode('resolved');
+            document.getElementById('tagFilter').value = 'all';
             document.getElementById('searchInput').value = '';
             document.getElementById('dateType').value = 'created_at';
             document.getElementById('startDate').value = '';
@@ -304,6 +349,7 @@
                 'วันที่ร้องเรียน': formatDateOnly(item.created_at),
                 'หัวข้อร้องเรียน': item.title || '',
                 'รายละเอียดของเรื่องร้องเรียน': item.description || '',
+                'หน่วยงานรับผิดชอบ': item.department_tags || '-',
                 'พิกัดจุดร้องเรียน': `${item.latitude}, ${item.longitude}`,
                 'ผลการจัดการเรื่องร้องเรียน': item.resolution_note || '-',
                 'วันที่ดำเนินการแล้วเสร็จ': formatDateOnly(item.resolved_at)
@@ -328,9 +374,10 @@
                     <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; white-space: nowrap; word-break: break-all;">${formatDateOnly(item.created_at)}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; font-weight: bold; word-break: break-word; overflow-wrap: anywhere;">${item.title || ''}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.description || '-'}</td>
-                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; font-size: 6.5px; word-break: break-all;">${item.latitude},<br>${item.longitude}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.department_tags || '-'}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.resolution_note || '-'}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; white-space: nowrap; word-break: break-all;">${formatDateOnly(item.resolved_at)}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; font-size: 6.5px; word-break: break-all;">${item.latitude},<br>${item.longitude}</td>
                 </tr>
             `).join('');
 
