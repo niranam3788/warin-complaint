@@ -2,194 +2,278 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard แผนที่เรื่องร้องเรียน - วารินชำราบ</title>
+    <title>Dashboard วิเคราะห์เรื่องร้องเรียน</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Prompt', sans-serif; }
-        #map { height: 100vh; width: 100%; }
-    </style>
+    <style>body { font-family: 'Prompt', sans-serif; }</style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="flex h-screen bg-slate-100 overflow-hidden">
 
-    <!-- แผง Sidebar ด้านซ้าย (ขยายความกว้างเป็น w-96) -->
-    <div class="w-96 bg-white shadow-xl z-10 flex flex-col h-full shrink-0">
-        <!-- ส่วนหัวและลิงก์เมนู -->
-        <div class="p-4 bg-slate-800 text-white flex justify-between items-center">
-            <div>
-                <h1 class="text-base font-bold">📊 ติดตามเรื่องร้องเรียน</h1>
-                <p class="text-[11px] text-slate-300">เทศบาลเมืองวารินชำราบ</p>
-            </div>
-            <a href="admin-panel.html" class="bg-emerald-600 hover:bg-emerald-700 text-xs px-2.5 py-1.5 rounded-lg font-medium transition">จัดการเคส</a>
+    <!-- Sidebar ขนาด 50% -->
+    <div class="w-1/2 bg-white shadow-xl z-10 flex flex-col h-full overflow-y-auto p-6 space-y-6">
+        <!-- ส่วนหัวข้อและปุ่มกลับเมนูหลัก -->
+        <div class="flex justify-between items-center">
+            <h1 class="text-xl font-bold text-slate-800">📊 แดชบอร์ดสรุปข้อมูลการร้องเรียน</h1>
+            <a href="admin-menu.html" class="bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-lg text-xs font-medium shadow transition flex items-center space-x-1">
+                <span>←</span>
+                <span>เมนหลัก</span>
+            </a>
         </div>
-
-        <!-- กล่องตัวเลขแสดงจำนวนเคสที่กำลังดำเนินการ -->
-        <div class="p-3.5 bg-blue-600 text-white flex justify-between items-center shadow-sm">
-            <div>
-                <p class="text-xs text-blue-100 font-medium">เคสที่กำลังดำเนินการทั้งหมด</p>
-                <h2 id="totalPendingCount" class="text-2xl font-extrabold mt-0.5">0</h2>
-            </div>
-            <div class="bg-blue-500/50 px-2.5 py-1.5 rounded-lg border border-blue-400/30 text-center">
-                <span class="text-[9px] block text-blue-100">สถานะ</span>
-                <span class="text-xs font-bold text-white">Pending</span>
-            </div>
-        </div>
-
-        <!-- แถบกรองข้อมูลตาม Tag -->
-        <div class="p-3 bg-slate-50 border-b border-slate-200">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">🔍 กอง/ฝ่ายที่รับผิดชอบ:</label>
-            <select id="dashboardTagFilter" onchange="filterDashboard()" class="w-full px-3 py-2 text-xs border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 font-medium">
-                <option value="all">ทั้งหมดทุกหน่วยงาน</option>
-                <option value="untagged">⚠️ ยังไม่ได้ติด Tag (รอจ่ายงาน)</option>
-                <optgroup label="รายชื่อกอง/ฝ่าย">
-                    <option value="สำนักปลัดเทศบาล">สำนักปลัดเทศบาล</option>
-                    <option value="กองคลัง">กองคลัง</option>
-                    <option value="กองยุทธศาสตร์ฯ">กองยุทธศาสตร์ฯ</option>
-                    <option value="กองสาธารณสุขฯ">กองสาธารณสุขฯ</option>
-                    <option value="กองสวัสดิการสังคม">กองสวัสดิการสังคม</option>
-                    <option value="กองการเจ้าหน้าที่">กองการเจ้าหน้าที่</option>
-                    <option value="กองช่าง">กองช่าง</option>
-                    <option value="กองช่างสุขา">กองช่างสุขา</option>
-                    <option value="กองการศึกษา">กองการศึกษา</option>
-                    <option value="กลุ่มงานป้องกันฯ">กลุ่มงานป้องกันฯ</option>
-                    <option value="งานนิติการ">งานนิติการ</option>
-                    <option value="สำนักทะเบียน">สำนักทะเบียน</option>
-                    <option value="พื้นที่นอกเขตรับผิดชอบ">พื้นที่นอกเขตรับผิดชอบ</option>
-                </optgroup>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <select id="filterMonth" class="p-2 border rounded text-sm text-slate-700">
+                <option value="">ทุกเดือน</option>
+                <option value="1">มกราคม</option>
+                <option value="2">กุมภาพันธ์</option>
+                <option value="3">มีนาคม</option>
+                <option value="4">เมษายน</option>
+                <option value="5">พฤษภาคม</option>
+                <option value="6">มิถุนายน</option>
+                <option value="7">กรกฎาคม</option>
+                <option value="8">สิงหาคม</option>
+                <option value="9">กันยายน</option>
+                <option value="10">ตุลาคม</option>
+                <option value="11">พฤศจิกายน</option>
+                <option value="12">ธันวาคม</option>
+            </select>
+            <select id="filterYear" class="p-2 border rounded text-sm text-slate-700">
+                <option value="">ทุกปี (แสดงทั้งหมด)</option>
+                <!-- ปีจะถูกเพิ่มด้วย JavaScript ถึง 2590 -->
             </select>
         </div>
 
-        <!-- ลิงก์ไปหน้าประวัติ -->
-        <div class="px-3.5 py-2 bg-slate-100 border-b border-slate-200 flex justify-between items-center text-xs">
-            <span class="text-slate-500 font-medium">รายการเรื่องร้องเรียน</span>
-            <a href="resolved-dashboard.html" class="text-blue-600 hover:underline font-medium">ดูประวัติงานที่เสร็จแล้ว &rarr;</a>
+        <!-- กราฟแสดงสถิติตามช่วงเวลา (รายวัน / รายเดือน) -->
+        <div>
+            <p class="text-sm font-bold text-slate-600 mb-2" id="trendTitle">สถิติจำนวนเรื่องร้องเรียนตามช่วงเวลา</p>
+            <canvas id="trendChart" style="max-height: 220px;"></canvas>
         </div>
 
-        <!-- รายการการ์ดคำร้อง -->
-        <div id="complaintList" class="flex-1 overflow-y-auto p-3.5 space-y-3">
-            <p class="text-xs text-slate-400 text-center py-4">กำลังโหลดข้อมูล...</p>
+        <div>
+            <p class="text-sm font-bold text-slate-600 mb-2">เปรียบเทียบสถานะแยกตามหน่วยงาน</p>
+            <canvas id="barChart" style="max-height: 250px;"></canvas>
+        </div>
+        
+        <div style="max-width: 380px; margin: auto;">
+            <p class="text-sm font-bold text-slate-600 mb-2 text-center">สัดส่วนเรื่องร้องเรียนแต่ละหน่วยงาน</p>
+            <canvas id="pieChart"></canvas>
         </div>
     </div>
 
-    <!-- ส่วนแสดงแผนที่ -->
-    <div class="flex-1 h-full relative">
-        <div id="map"></div>
+    <!-- ส่วนแผนที่และกล่องคำอธิบายซ้อนทับ -->
+    <div class="flex-1 relative">
+        <div id="map" class="h-full w-full"></div>
+        
+        <!-- กล่องคำอธิบายความหมายของหมุด (Legend) ลอยอยู่ขวาบน -->
+        <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg z-[1000] border border-slate-200 text-xs space-y-2">
+            <div class="font-bold text-slate-700 mb-1">สัญลักษณ์สถานะหมุด</div>
+            <div class="flex items-center space-x-2">
+                <div style="background-color: #f59e0b; border: 1.5px solid black; width: 12px; height: 12px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: inline-block;"></div>
+                <span class="text-slate-600">หมุดสีเหลือง = กำลังดำเนินการ</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div style="background-color: #22c55e; border: 1.5px solid black; width: 12px; height: 12px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: inline-block;"></div>
+                <span class="text-slate-600">หมุดสีเขียว = ดำเนินการแล้วเสร็จ</span>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        const SUPABASE_URL = 'https://idgojpyhowjjphhanljt.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // สร้างตัวเลือกปี พ.ศ. 2568 ถึง 2590
+        const yearSelect = document.getElementById('filterYear');
+        for (let y = 2568; y <= 2590; y++) {
+            let opt = document.createElement('option');
+            opt.value = y - 543; 
+            opt.innerHTML = y;
+            if (y === 2569) opt.selected = true; // ตั้งค่าเริ่มต้นเป็นปี 2569
+            yearSelect.appendChild(opt);
+        }
 
-        const map = L.map('map').setView([15.1934, 104.8715], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        const markersLayer = L.layerGroup().addTo(map);
+        const _supabase = supabase.createClient('https://idgojpyhowjjphhanljt.supabase.co', 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2');
+        const tags = ["สำนักปลัดเทศบาล", "กองคลัง", "กองยุทธศาสตร์ฯ", "กองสาธารณสุขฯ", "กองสวัสดิการสังคม", "กองการเจ้าหน้าที่", "กองช่าง", "กองช่างสุขา", "กองการศึกษา", "กลุ่มงานป้องกันฯ", "งานนิติการ", "สำนักทะเบียน", "พื้นที่นอกเขตรับผิดชอบ"];
+        
         let allData = [];
+        let barChart, pieChart, trendChart;
+        const map = L.map('map').setView([15.1934, 104.8715], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        async function loadComplaints() {
-            const { data, error } = await _supabase
-                .from('complaints')
-                .select('*')
-                .eq('status', 'pending')
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error(error);
-                return;
-            }
-
+        async function loadData() {
+            const { data } = await _supabase.from('complaints').select('*');
             allData = data || [];
-            renderDashboard(allData);
+            updateDashboard();
         }
 
-        function filterDashboard() {
-            const filterValue = document.getElementById('dashboardTagFilter').value;
-            let filtered = allData;
+        function updateDashboard() {
+            const month = document.getElementById('filterMonth').value;
+            const year = document.getElementById('filterYear').value;
+            
+            const filtered = allData.filter(i => {
+                if (!i.created_at) return false;
+                const d = new Date(i.created_at);
+                return (!month || (d.getMonth() + 1) == month) && (!year || d.getFullYear() == year);
+            });
 
-            if (filterValue === 'untagged') {
-                filtered = allData.filter(i => !i.department_tags || i.department_tags.trim() === "");
-            } else if (filterValue !== 'all') {
-                filtered = allData.filter(i => i.department_tags && i.department_tags.includes(filterValue));
+            // --- 1. Render Trend Chart (กราฟแสดงตามช่วงเวลา: รายวัน หรือ รายเดือน) ---
+            let trendLabels = [];
+            let trendData = [];
+            
+            const currentAdYear = year ? parseInt(year) : new Date().getFullYear();
+            const currentThYear = currentAdYear + 543;
+            const leapThYears = [2571, 2575, 2579, 2583, 2587];
+
+            if (month !== "") {
+                const mNum = parseInt(month);
+                let daysCount = 30;
+                if ([1, 3, 5, 7, 8, 10, 12].includes(mNum)) {
+                    daysCount = 31;
+                } else if ([4, 6, 9, 11].includes(mNum)) {
+                    daysCount = 30;
+                } else if (mNum === 2) {
+                    if (leapThYears.includes(currentThYear)) {
+                        daysCount = 29;
+                    } else {
+                        daysCount = 28;
+                    }
+                }
+
+                trendLabels = Array.from({length: daysCount}, (_, i) => (i + 1).toString());
+                trendData = trendLabels.map(day => {
+                    return filtered.filter(i => {
+                        const d = new Date(i.created_at);
+                        return d.getDate() === parseInt(day) && (d.getMonth() + 1) === mNum && (!year || d.getFullYear() === parseInt(year));
+                    }).length;
+                });
+                document.getElementById('trendTitle').innerText = `สถิติจำนวนเรื่องร้องเรียนรายวัน (เดือน ${document.getElementById('filterMonth').options[document.getElementById('filterMonth').selectedIndex].text})`;
+            } else {
+                trendLabels = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                trendData = trendLabels.map((_, idx) => {
+                    const mNum = idx + 1;
+                    return filtered.filter(i => {
+                        const d = new Date(i.created_at);
+                        return (d.getMonth() + 1) === mNum && (!year || d.getFullYear() === parseInt(year));
+                    }).length;
+                });
+                document.getElementById('trendTitle').innerText = "สถิติจำนวนเรื่องร้องเรียนรายเดือน (ภาพรวมทั้งปี)";
             }
 
-            renderDashboard(filtered);
-        }
+            const maxTrendVal = Math.max(...trendData, 0);
+            const topTrendLimit = Math.max(maxTrendVal + 3, Math.ceil(maxTrendVal * 1.25));
 
-        function renderDashboard(data) {
-            document.getElementById('totalPendingCount').textContent = data.length;
+            if(trendChart) trendChart.destroy();
+            trendChart = new Chart(document.getElementById('trendChart'), {
+                type: 'bar',
+                plugins: [ChartDataLabels],
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: 'จำนวนเรื่อง',
+                        data: trendData,
+                        backgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        datalabels: { anchor: 'end', align: 'top', color: '#475569', font: { size: 9 } },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { font: { size: 9 } } },
+                        y: {
+                            beginAtZero: true,
+                            max: topTrendLimit,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
 
-            const listContainer = document.getElementById('complaintList');
-            listContainer.innerHTML = '';
-            markersLayer.clearLayers();
+            // --- 2. Render Bar Chart (เปรียบเทียบสถานะแยกตามหน่วยงาน) ---
+            const totalData = tags.map(t => filtered.filter(i => i.department_tags?.includes(t)).length);
+            const pendingData = tags.map(t => filtered.filter(i => i.department_tags?.includes(t) && i.status === 'pending').length);
+            
+            const maxBarVal = Math.max(...totalData, ...pendingData, 0);
+            const topBarLimit = Math.max(maxBarVal + 3, Math.ceil(maxBarVal * 1.25));
 
-            if (!data.length) {
-                listContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">ไม่พบเรื่องร้องเรียนตามเงื่อนไข</p>';
-                return;
-            }
+            if(barChart) barChart.destroy();
+            barChart = new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                plugins: [ChartDataLabels],
+                data: { labels: tags, datasets: [
+                    { label: 'ทั้งหมด', data: totalData, backgroundColor: '#3b82f6' },
+                    { label: 'ค้าง', data: pendingData, backgroundColor: '#f59e0b' }
+                ]},
+                options: { 
+                    responsive: true,
+                    plugins: { 
+                        datalabels: { anchor: 'end', align: 'top', color: '#475569', font: { size: 10 } }, 
+                        legend: { position: 'bottom' } 
+                    },
+                    scales: { 
+                        x: { ticks: { maxRotation: 90, minRotation: 90, font: { size: 10 } } },
+                        y: { 
+                            beginAtZero: true,
+                            max: topBarLimit,
+                            ticks: { stepSize: 1 }
+                        } 
+                    }
+                }
+            });
 
-            const now = new Date();
+            // --- 3. Render Pie Chart (สัดส่วนแต่ละหน่วยงาน) ---
+            if(pieChart) pieChart.destroy();
+            pieChart = new Chart(document.getElementById('pieChart'), {
+                type: 'pie',
+                plugins: [ChartDataLabels],
+                data: { 
+                    labels: tags, 
+                    datasets: [{ 
+                        data: totalData, 
+                        backgroundColor: ['#ef4444','#f97316','#eab308','#84cc16','#22c55e','#06b6d4','#3b82f6','#6366f1','#8b5cf6','#d946ef','#f43f5e','#71717a','#94a3b8'] 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        datalabels: {
+                            color: '#fff',
+                            font: { weight: 'bold', size: 11 },
+                            formatter: (value, ctx) => {
+                                if (value === 0) return ''; 
+                                const label = ctx.chart.data.labels[ctx.dataIndex];
+                                return `${label}\n(${value})`; 
+                            },
+                            textAlign: 'center'
+                        }
+                    } 
+                }
+            });
 
-            data.forEach((item) => {
-                if (item.latitude && item.longitude) {
-                    const createdAt = new Date(item.created_at);
-                    const totalHours = Math.floor((now - createdAt) / (1000 * 60 * 60));
-                    const daysPassed = Math.floor(totalHours / 24);
-                    const textTime = totalHours < 24 ? (totalHours === 0 ? 'เพิ่งแจ้ง' : `${totalHours} ชม.`) : `${daysPassed} วัน`;
-                    
-                    let badgeColor = 'bg-emerald-100 text-emerald-800';
-                    if (daysPassed > 7) badgeColor = 'bg-red-100 text-red-800 font-bold';
-                    else if (daysPassed > 3) badgeColor = 'bg-amber-100 text-amber-800';
-
-                    const tags = item.department_tags ? item.department_tags.split(',').map(t => t.trim()).filter(t => t) : [];
-                    const tagsHtml = tags.map(t => `<span class="px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-700 rounded border border-blue-200">📌 ${t}</span>`).join(' ');
-
-                    const marker = L.marker([item.latitude, item.longitude]);
-
-                    const popupContent = `
-                        <div class="p-2 max-w-[200px]">
-                            <div class="flex gap-1 mb-1 flex-wrap">${tagsHtml}</div>
-                            <h3 class="font-bold text-sm text-slate-800">${item.title}</h3>
-                            <p class="text-xs text-slate-600 mt-1">${item.description || '-'}</p>
-                            <div class="mt-2 pt-2 border-t text-[10px] text-slate-500">
-                                ผู้แจ้ง: ${item.reporter_name || 'ไม่ระบุ'}<br>
-                                แจ้งเมื่อ: ${new Date(item.created_at).toLocaleString('th-TH')}
-                            </div>
-                        </div>
-                    `;
-                    marker.bindPopup(popupContent);
-                    markersLayer.addLayer(marker);
-
-                    const card = document.createElement('div');
-                    card.className = 'p-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer';
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start gap-1">
-                            <span class="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-600 rounded-full">${item.category || 'ทั่วไป'}</span>
-                            <span class="px-2 py-0.5 text-[10px] font-semibold ${badgeColor} rounded-full">${textTime}</span>
-                        </div>
-                        <h4 class="font-semibold text-xs text-slate-800 mt-1.5">${item.title}</h4>
-                        <div class="flex flex-wrap gap-1 mt-2">${tagsHtml || '<span class="text-[10px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">⚠️ รอจ่ายงาน</span>'}</div>
-                    `;
-
-                    card.addEventListener('click', () => {
-                        map.setView([item.latitude, item.longitude], 16);
-                        marker.openPopup();
-                    });
-
-                    listContainer.appendChild(card);
+            // --- 4. Render Map Markers ---
+            map.eachLayer(layer => { if(layer.options && layer.options.className === 'custom-pin') map.removeLayer(layer); });
+            filtered.forEach(item => {
+                if(item.latitude && item.longitude) {
+                    const color = item.status === 'pending' ? '#f59e0b' : '#22c55e';
+                    L.marker([item.latitude, item.longitude], {
+                        icon: L.divIcon({
+                            className: 'custom-pin',
+                            html: `<div style="background-color: ${color}; border: 2px solid black; width: 18px; height: 18px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 2px 5px rgba(0,0,0,0.4);"></div>`,
+                            iconSize: [18, 18],
+                            iconAnchor: [9, 18]
+                        })
+                    }).addTo(map).bindPopup(`<b>${item.title}</b><br>สถานะ: ${item.status === 'pending' ? 'รอดำเนินการ' : 'เสร็จสิ้น'}`);
                 }
             });
         }
 
-        loadComplaints();
+        document.querySelectorAll('select').forEach(el => el.addEventListener('change', updateDashboard));
+        loadData();
     </script>
 </body>
 </html>
