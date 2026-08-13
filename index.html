@@ -13,13 +13,18 @@
 <body class="bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100 min-h-screen py-8 px-4 flex items-center justify-center">
     <div class="max-w-xl w-auto mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-blue-100">
         
-        <!-- ส่วนหัวข้อ พร้อมโลโก้เทศบาลด้านซ้าย (แก้เป็น .png ตามไฟล์จริงของคุณแล้ว) -->
-        <div class="flex items-center gap-4 mb-6 pb-4 border-b border-slate-100">
-            <img src="warincityLogo.png" alt="โลโก้เทศบาลเมืองวารินชำราบ" class="w-16 h-16 object-contain rounded-full shadow-md border-2 border-blue-600 p-0.5 bg-white shrink-0">
-            <div>
-                <h1 class="text-xl md:text-2xl font-bold text-blue-900">📝 ระบบแจ้งเรื่องร้องเรียนออนไลน์</h1>
-                <p class="text-xs md:text-sm text-slate-500 mt-0.5">เทศบาลเมืองวารินชำราบ จังหวัดอุบลราชธานี</p>
+        <!-- ส่วนหัวข้อ พร้อมโลโก้เทศบาลด้านซ้าย และปุ่มติดตามเรื่องร้องเรียนที่มุมขวาบน -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div class="flex items-center gap-4">
+                <img src="warincityLogo.png" alt="โลโก้เทศบาลเมืองวารินชำราบ" class="w-16 h-16 object-contain rounded-full shadow-md border-2 border-blue-600 p-0.5 bg-white shrink-0">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-blue-900">📝 ระบบแจ้งเรื่องร้องเรียนออนไลน์</h1>
+                    <p class="text-xs md:text-sm text-slate-500 mt-0.5">เทศบาลเมืองวารินชำราบ จังหวัดอุบลราชธานี</p>
+                </div>
             </div>
+            <a href="track-complaint.html" class="bg-amber-500 hover:bg-amber-600 text-white font-medium text-xs py-2 px-3.5 rounded-xl transition flex items-center gap-1.5 shadow-sm shrink-0">
+                🔍 ติดตามสถานะคำร้อง
+            </a>
         </div>
 
         <form id="complaintForm" class="space-y-4" onsubmit="submitComplaint(event)">
