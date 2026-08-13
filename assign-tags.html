@@ -49,7 +49,7 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        let allData = []; // เก็บข้อมูลทั้งหมดไว้ในเครื่องเพื่อทำ Filter
+        let allData = []; 
 
         const DEPARTMENTS = [
             { name: 'สำนักปลัดเทศบาล', bg: 'bg-blue-100 text-blue-800 border-blue-200' },
@@ -62,7 +62,7 @@
             { name: 'กองช่างสุขา', bg: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
             { name: 'กองการศึกษา', bg: 'bg-rose-100 text-rose-800 border-rose-200' },
             { name: 'กลุ่มงานป้องกันฯ', bg: 'bg-red-100 text-red-800 border-red-200' },
-            { name: 'งานนิตการ', bg: 'bg-teal-100 text-teal-800 border-teal-200' },
+            { name: 'งานนิติการ', bg: 'bg-teal-100 text-teal-800 border-teal-200' },
             { name: 'สำนักทะเบียน', bg: 'bg-violet-100 text-violet-800 border-violet-200' }
         ];
 
@@ -74,7 +74,6 @@
         }
 
         function filterComplaints(type) {
-            // เปลี่ยนสีปุ่ม
             document.querySelectorAll('button[id^="btn-"]').forEach(btn => btn.className = "px-4 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition");
             document.getElementById(`btn-${type}`).className = "px-4 py-2 text-sm font-medium rounded-lg bg-slate-800 text-white transition";
 
@@ -128,7 +127,7 @@
             if (error) return alert("บันทึกพลาด: " + error.message);
             alert("บันทึกสำเร็จ!");
             closeTagModal();
-            init(); // โหลดข้อมูลใหม่
+            init(); 
         }
 
         init();
