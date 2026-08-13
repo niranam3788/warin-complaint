@@ -93,23 +93,23 @@
         </div>
     </div>
 
-    <!-- ส่วนสำหรับแปลงร่างเป็น PDF (กำหนดฟอนต์และโครงสร้างสำหรับพิมพ์โดยเฉพาะ) -->
+    <!-- ส่วนสำหรับแปลงร่างเป็น PDF (ปรับขยายช่อง ผลการจัดการ และ รายละเอียด ให้กว้างเป็นพิเศษ) -->
     <div style="display: none;">
         <div id="pdfReportContent" style="padding: 10px; font-family: 'Tahoma', sans-serif; color: #000; background: #fff; width: 100%;">
-            <div style="text-align: center; margin-bottom: 15px;">
-                <h2 style="font-size: 15px; font-weight: bold; margin: 0 0 4px 0;">รายงานสรุปผลการดำเนินงานเรื่องร้องเรียน</h2>
+            <div style="text-align: center; margin-bottom: 12px;">
+                <h2 style="font-size: 15px; font-weight: bold; margin: 0 0 3px 0;">รายงานสรุปผลการดำเนินงานเรื่องร้องเรียน</h2>
                 <p style="font-size: 10px; margin: 0; color: #333;">เทศบาลเมืองวารินชำราบ จ.อุบลราชธานี</p>
             </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 8.5px; table-layout: fixed;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 7.5px; table-layout: fixed;">
                 <thead>
                     <tr style="background-color: #e2e8f0;">
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 5%;">ที่</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 11%;">วันที่ร้องเรียน</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 16%;">หัวข้อร้องเรียน</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 4%;">ที่</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 9%;">วันที่แจ้ง</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 14%;">หัวข้อ</th>
                         <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 23%;">รายละเอียด</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 13%;">พิกัด</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 22%;">ผลการจัดการ</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 10%;">วันที่เสร็จสิ้น</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 11%;">พิกัด</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 29%;">ผลการจัดการ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 10%;">วันที่เสร็จ</th>
                     </tr>
                 </thead>
                 <tbody id="pdfTableBody">
@@ -295,13 +295,13 @@
             const tbody = document.getElementById('pdfTableBody');
             tbody.innerHTML = currentFilteredData.map((item, index) => `
                 <tr>
-                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top;">${index + 1}</td>
-                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; white-space: nowrap;">${formatDateOnly(item.created_at)}</td>
-                    <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; font-weight: bold; word-break: break-word;">${item.title || ''}</td>
-                    <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word;">${item.description || '-'}</td>
-                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; font-size: 7.5px; white-space: nowrap;">${item.latitude},<br>${item.longitude}</td>
-                    <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word;">${item.resolution_note || '-'}</td>
-                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; white-space: nowrap;">${formatDateOnly(item.resolved_at)}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; word-break: break-all;">${index + 1}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; white-space: nowrap; word-break: break-all;">${formatDateOnly(item.created_at)}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; font-weight: bold; word-break: break-word; overflow-wrap: anywhere;">${item.title || ''}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.description || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; font-size: 6.5px; word-break: break-all;">${item.latitude},<br>${item.longitude}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.resolution_note || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; white-space: nowrap; word-break: break-all;">${formatDateOnly(item.resolved_at)}</td>
                 </tr>
             `).join('');
 
