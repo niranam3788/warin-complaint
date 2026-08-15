@@ -36,14 +36,14 @@
                 <div class="w-full lg:w-auto">
                     <label class="block text-xs font-semibold text-slate-600 mb-2">เลือกมุมมองรายงาน</label>
                     <div class="flex flex-wrap gap-2">
+                        <button onclick="setViewMode('all')" id="btn-all" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                            📂 เรื่องร้องเรียนทั้งหมด
+                        </button>
                         <button onclick="setViewMode('resolved')" id="btn-resolved" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-blue-600 text-white shadow-sm">
                             ✅ เรื่องร้องเรียนที่ปิดงานแล้ว
                         </button>
                         <button onclick="setViewMode('pending')" id="btn-pending" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
                             ⏳ เรื่องร้องเรียนที่ยังไม่ปิดงาน
-                        </button>
-                        <button onclick="setViewMode('all')" id="btn-all" class="px-4 py-2 text-xs font-semibold rounded-xl transition bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
-                            📂 เรื่องร้องเรียนทั้งหมด
                         </button>
                     </div>
                 </div>
@@ -58,10 +58,10 @@
                 </div>
             </div>
 
-            <!-- ส่วนกรองหน่วยงาน (Tag Filter) และวันที่ -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end pt-3 border-t border-slate-100">
+            <!-- ส่วนกรองหน่วยงาน, ชุมชน และวันที่ -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end pt-3 border-t border-slate-100">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">🏢 กรองตามหน่วยงานรับผิดชอบ</label>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">🏢 กรองตามหน่วยงาน</label>
                     <select id="tagFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 font-medium">
                         <option value="all">ทุกหน่วยงาน</option>
                         <option value="untagged">⚠️ ยังไม่ระบุหน่วยงาน</option>
@@ -80,6 +80,41 @@
                             <option value="สำนักทะเบียน">สำนักทะเบียน</option>
                             <option value="พื้นที่นอกเขตรับผิดชอบ">พื้นที่นอกเขตรับผิดชอบ</option>
                         </optgroup>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">🏡 กรองตามชุมชน</label>
+                    <select id="communityFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 font-medium">
+                        <option value="all">ทุกชุมชน</option>
+                        <option value="กุดปลาขาว">กุดปลาขาว</option>
+                        <option value="กุดเป่ง หมู่ 16">กุดเป่ง หมู่ 16</option>
+                        <option value="กุดเป่ง หมู่ 6">กุดเป่ง หมู่ 6</option>
+                        <option value="เกตุแก้ว">เกตุแก้ว</option>
+                        <option value="คำน้ำแซ่บ">คำน้ำแซ่บ</option>
+                        <option value="คูยาง">คูยาง</option>
+                        <option value="ชลประทาน">ชลประทาน</option>
+                        <option value="ดอนงิ้ว">ดอนงิ้ว</option>
+                        <option value="ดีงาม">ดีงาม</option>
+                        <option value="ต้นแต้">ต้นแต้</option>
+                        <option value="ท่ากอไผ่">ท่ากอไผ่</option>
+                        <option value="ท่าบ้งมั่ง">ท่าบ้งมั่ง</option>
+                        <option value="บูรณะ">บูรณะ</option>
+                        <option value="บ้านสวนวาริน">บ้านสวนวาริน</option>
+                        <option value="ลับแล">ลับแล</option>
+                        <option value="วัดผาสุการาม">วัดผาสุการาม</option>
+                        <option value="วัดวารินทราราม">วัดวารินทราราม</option>
+                        <option value="สุขสำราญ">สุขสำราญ</option>
+                        <option value="แสนสำราญ">แสนสำราญ</option>
+                        <option value="หาดสวนยา">หาดสวนยา</option>
+                        <option value="หาดสวนสุข">หาดสวนสุข</option>
+                        <option value="หาดสวนสุข 1">หาดสวนสุข 1</option>
+                        <option value="ห้าแยก">ห้าแยก</option>
+                        <option value="หนองกอก">หนองกอก</option>
+                        <option value="หนองตาโผ่น">หนองตาโผ่น</option>
+                        <option value="หนองบก">หนองบก</option>
+                        <option value="แหลมทอง">แหลมทอง</option>
+                        <option value="อยู่เย็น">อยู่เย็น</option>
+                        <option value="ไม่ทราบ หรือไม่สามารถระบุได้">ไม่ทราบ หรือ ไม่สามารถระบุได้</option>
                     </select>
                 </div>
                 <div>
@@ -138,12 +173,13 @@
                     <tr style="background-color: #e2e8f0;">
                         <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 4%;">ที่</th>
                         <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 8%;">วันที่แจ้ง</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 13%;">หัวข้อ</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 20%;">รายละเอียด</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 13%;">หน่วยงานรับผิดชอบ</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 24%;">ผลการจัดการ</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 9%;">วันที่เสร็จ</th>
-                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 9%;">พิกัด</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 12%;">หัวข้อ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 17%;">รายละเอียด</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 11%;">ชุมชน</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 12%;">หน่วยงาน</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: left; width: 21%;">ผลการจัดการ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 8%;">วันที่เสร็จ</th>
+                        <th style="border: 1px solid #94a3b8; padding: 5px; text-align: center; width: 7%;">พิกัด</th>
                     </tr>
                 </thead>
                 <tbody id="pdfTableBody">
@@ -209,6 +245,7 @@
             const endDateVal = document.getElementById('endDate').value;
             const searchKeyword = document.getElementById('searchInput').value.toLowerCase().trim();
             const tagFilterVal = document.getElementById('tagFilter').value;
+            const communityFilterVal = document.getElementById('communityFilter').value;
 
             let filtered = allMasterData;
 
@@ -226,6 +263,17 @@
                 filtered = filtered.filter(item => item.department_tags && item.department_tags.includes(tagFilterVal));
             }
 
+            // กรองตามชุมชน
+            if (communityFilterVal !== 'all') {
+                filtered = filtered.filter(item => {
+                    const itemComm = (item.community || '').trim();
+                    if (communityFilterVal === 'ไม่ทราบ หรือไม่สามารถระบุได้') {
+                        return !itemComm || itemComm === 'ไม่ทราบ หรือไม่สามารถระบุได้' || itemComm === '-';
+                    }
+                    return itemComm === communityFilterVal;
+                });
+            }
+
             // กรองคำค้นหา
             if (searchKeyword) {
                 filtered = filtered.filter(item => {
@@ -235,13 +283,15 @@
                     const reporterName = (item.reporter_name || '').toLowerCase();
                     const reporterPhone = (item.reporter_phone || '').toLowerCase();
                     const tags = (item.department_tags || '').toLowerCase();
+                    const community = (item.community || '').toLowerCase();
 
                     return title.includes(searchKeyword) || 
                            desc.includes(searchKeyword) || 
                            category.includes(searchKeyword) || 
                            reporterName.includes(searchKeyword) || 
                            reporterPhone.includes(searchKeyword) ||
-                           tags.includes(searchKeyword);
+                           tags.includes(searchKeyword) ||
+                           community.includes(searchKeyword);
                 });
             }
 
@@ -286,6 +336,8 @@
                     ? tags.map(t => `<span class="px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-700 rounded border border-blue-200">📌 ${t}</span>`).join(' ')
                     : '<span class="text-[10px] text-red-500 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">⚠️ ยังไม่ระบุหน่วยงาน</span>';
 
+                const communityText = item.community && item.community.trim() !== '' ? item.community : 'ไม่ทราบ หรือไม่สามารถระบุได้';
+
                 return `
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between">
                         <div class="p-5">
@@ -298,6 +350,7 @@
                             </div>
                             <h3 class="font-bold text-slate-800 text-base">${item.title}</h3>
                             <p class="text-xs text-slate-500 mt-1">หมวดหมู่: ${item.category || '-'}</p>
+                            <p class="text-xs text-emerald-700 font-medium mt-0.5">🏡 ชุมชน: ${communityText}</p>
                             <p class="text-xs text-slate-500 mt-0.5">ผู้แจ้ง: ${item.reporter_name || 'ไม่ระบุ'} (${item.reporter_phone || '-'})</p>
                             <p class="text-xs text-slate-600 mt-2">รายละเอียด: ${item.description || '-'}</p>
                             
@@ -331,6 +384,7 @@
         function resetFilter() {
             setViewMode('resolved');
             document.getElementById('tagFilter').value = 'all';
+            document.getElementById('communityFilter').value = 'all';
             document.getElementById('searchInput').value = '';
             document.getElementById('dateType').value = 'created_at';
             document.getElementById('startDate').value = '';
@@ -349,6 +403,7 @@
                 'วันที่ร้องเรียน': formatDateOnly(item.created_at),
                 'หัวข้อร้องเรียน': item.title || '',
                 'รายละเอียดของเรื่องร้องเรียน': item.description || '',
+                'ชุมชน': item.community || 'ไม่ทราบ หรือไม่สามารถระบุได้',
                 'หน่วยงานรับผิดชอบ': item.department_tags || '-',
                 'พิกัดจุดร้องเรียน': `${item.latitude}, ${item.longitude}`,
                 'ผลการจัดการเรื่องร้องเรียน': item.resolution_note || '-',
@@ -374,6 +429,7 @@
                     <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; white-space: nowrap; word-break: break-all;">${formatDateOnly(item.created_at)}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; font-weight: bold; word-break: break-word; overflow-wrap: anywhere;">${item.title || ''}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.description || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.community || 'ไม่ทราบ หรือไม่สามารถระบุได้'}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.department_tags || '-'}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; vertical-align: top; word-break: break-word; overflow-wrap: anywhere;">${item.resolution_note || '-'}</td>
                     <td style="border: 1px solid #94a3b8; padding: 5px; text-align: center; vertical-align: top; white-space: nowrap; word-break: break-all;">${formatDateOnly(item.resolved_at)}</td>
