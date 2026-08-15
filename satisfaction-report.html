@@ -30,18 +30,53 @@
             </a>
         </div>
 
-        <!-- กล่องกรองข้อมูลตามช่วงเวลา -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <!-- กล่องกรองข้อมูลตามช่วงเวลาและชุมชน -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">ตั้งแต่วันที่ปิดงาน / ถึงวันที่</label>
                 <div class="flex gap-2">
-                    <input type="date" id="startDate" class="w-1/2 px-2 py-2 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <input type="date" id="endDate" class="w-1/2 px-2 py-2 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="date" id="startDate" onchange="applyFilters()" class="w-1/2 px-2 py-2 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="date" id="endDate" onchange="applyFilters()" class="w-1/2 px-2 py-2 text-xs border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
             <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">🏡 กรองตามชุมชน</label>
+                <select id="communityFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-sm border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="all">ทุกชุมชน</option>
+                    <option value="กุดปลาขาว">กุดปลาขาว</option>
+                    <option value="กุดเป่ง หมู่ 16">กุดเป่ง หมู่ 16</option>
+                    <option value="กุดเป่ง หมู่ 6">กุดเป่ง หมู่ 6</option>
+                    <option value="เกตุแก้ว">เกตุแก้ว</option>
+                    <option value="คำน้ำแซ่บ">คำน้ำแซ่บ</option>
+                    <option value="คูยาง">คูยาง</option>
+                    <option value="ชลประทาน">ชลประทาน</option>
+                    <option value="ดอนงิ้ว">ดอนงิ้ว</option>
+                    <option value="ดีงาม">ดีงาม</option>
+                    <option value="ต้นแต้">ต้นแต้</option>
+                    <option value="ท่ากอไผ่">ท่ากอไผ่</option>
+                    <option value="ท่าบ้งมั่ง">ท่าบ้งมั่ง</option>
+                    <option value="บูรณะ">บูรณะ</option>
+                    <option value="บ้านสวนวาริน">บ้านสวนวาริน</option>
+                    <option value="ลับแล">ลับแล</option>
+                    <option value="วัดผาสุการาม">วัดผาสุการาม</option>
+                    <option value="วัดวารินทราราม">วัดวารินทราราม</option>
+                    <option value="สุขสำราญ">สุขสำราญ</option>
+                    <option value="แสนสำราญ">แสนสำราญ</option>
+                    <option value="หาดสวนยา">หาดสวนยา</option>
+                    <option value="หาดสวนสุข">หาดสวนสุข</option>
+                    <option value="หาดสวนสุข 1">หาดสวนสุข 1</option>
+                    <option value="ห้าแยก">ห้าแยก</option>
+                    <option value="หนองกอก">หนองกอก</option>
+                    <option value="หนองตาโผ่น">หนองตาโผ่น</option>
+                    <option value="หนองบก">หนองบก</option>
+                    <option value="แหลมทอง">แหลมทอง</option>
+                    <option value="อยู่เย็น">อยู่เย็น</option>
+                    <option value="ไม่ทราบ หรือ ไม่สามารถระบุได้">ไม่ทราบ หรือ ไม่สามารถระบุได้</option>
+                </select>
+            </div>
+            <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">กรองตามคะแนนดาว</label>
-                <select id="scoreFilter" class="w-full px-3 py-2 text-sm border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="scoreFilter" onchange="applyFilters()" class="w-full px-3 py-2 text-sm border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="all">คะแนนทั้งหมด (1-5 ดาว)</option>
                     <option value="5">⭐⭐⭐⭐⭐ (5 ดาว)</option>
                     <option value="4">⭐⭐⭐⭐ (4 ดาว)</option>
@@ -60,15 +95,31 @@
             </div>
         </div>
 
+        <!-- แถบแสดงสรุปสถิติภาพรวม 4 ช่อง -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-slate-400">
+                <p class="text-xs text-slate-500 font-medium">เรื่องร้องเรียนทั้งหมด</p>
+                <h2 id="totalAll" class="text-xl font-bold text-slate-800 mt-1">0 เรื่อง</h2>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
+                <p class="text-xs text-slate-500 font-medium">ดำเนินการเสร็จสิ้น</p>
+                <h2 id="totalResolved" class="text-xl font-bold text-blue-600 mt-1">0 เรื่อง</h2>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+                <p class="text-xs text-slate-500 font-medium">ได้รับการประเมินแล้ว</p>
+                <h2 id="totalRated" class="text-xl font-bold text-emerald-600 mt-1">0 เรื่อง</h2>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
+                <p class="text-xs text-slate-500 font-medium">เปอร์เซ็นต์การประเมิน</p>
+                <h2 id="percentRated" class="text-xl font-bold text-amber-600 mt-1">0%</h2>
+            </div>
+        </div>
+
         <!-- ส่วนสรุปสถิติและกราฟ -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between space-y-4">
                 <h3 class="font-bold text-slate-800 text-base">📈 สรุปภาพรวมคะแนน</h3>
                 <div class="space-y-3">
-                    <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 flex justify-between items-center">
-                        <span class="text-xs font-medium text-blue-900">งานที่ปิดและประเมินแล้ว</span>
-                        <span id="totalEvaluated" class="text-lg font-bold text-blue-700">0 รายการ</span>
-                    </div>
                     <div class="p-3 bg-amber-50 rounded-xl border border-amber-100 flex justify-between items-center">
                         <span class="text-xs font-medium text-amber-900">คะแนนความพึงพอใจเฉลี่ย</span>
                         <span id="avgScore" class="text-lg font-bold text-amber-600">0.00 / 5.00</span>
@@ -83,8 +134,8 @@
                 <h3 class="font-bold text-slate-800 text-base mb-4">🥧 สัดส่วนคะแนนความพึงพอใจ (แยกตามระดับดาว)</h3>
                 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-8">
-                    <!-- ตัวกราฟวงกลม -->
-                    <div class="w-52 h-52 relative flex items-center justify-center">
+                    <!-- ตัวกราฟวงกลม / หรือแสดงข้อความกรณีไม่มีข้อมูล -->
+                    <div class="w-52 h-52 relative flex items-center justify-center text-center" id="chartWrapper">
                         <canvas id="satisfactionChart"></canvas>
                     </div>
                     <!-- คำอธิบายสีด้านขวา จัดเรียงแถวลงมาอย่างสวยงาม -->
@@ -122,7 +173,6 @@
     </div>
 
     <script>
-        // ลงทะเบียน Plugin สำหรับแสดงเปอร์เซ็นต์บนพายชาร์ต
         Chart.register(ChartDataLabels);
 
         const SUPABASE_URL = 'https://idgojpyhowjjphhanljt.supabase.co';
@@ -130,7 +180,6 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allMasterData = [];
-        let currentFilteredData = [];
         let myChart = null;
 
         function formatDateOnly(dateString) {
@@ -144,11 +193,9 @@
         }
 
         async function loadSatisfactionData() {
-            // ดึงข้อมูลทั้งหมดที่มีการประเมินคะแนนแล้ว (satisfaction_score ไม่เป็น null)
             const { data, error } = await _supabase
                 .from('complaints')
                 .select('*')
-                .not('satisfaction_score', 'is', null)
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -165,18 +212,23 @@
             const startDateVal = document.getElementById('startDate').value;
             const endDateVal = document.getElementById('endDate').value;
             const scoreFilter = document.getElementById('scoreFilter').value;
+            const communityFilterVal = document.getElementById('communityFilter').value;
 
-            let filtered = allMasterData;
+            // 1. กรองเฉพาะ ชุมชน และ ช่วงวันที่ (สำหรับคำนวณการ์ดสถิติภาพรวมด้านบน)
+            let baseFiltered = allMasterData;
 
-            // กรองตามคะแนนดาว
-            if (scoreFilter !== 'all') {
-                const targetScore = parseInt(scoreFilter);
-                filtered = filtered.filter(item => item.satisfaction_score === targetScore);
+            if (communityFilterVal !== 'all') {
+                baseFiltered = baseFiltered.filter(item => {
+                    const itemComm = (item.community || item.village || item.location || '').trim();
+                    if (communityFilterVal === 'ไม่ทราบ หรือ ไม่สามารถระบุได้') {
+                        return !itemComm || itemComm === 'ไม่ทราบ หรือ ไม่สามารถระบุได้' || itemComm === 'ไม่ทราบ หรือไม่สามารถระบุได้' || itemComm === '-';
+                    }
+                    return itemComm === communityFilterVal;
+                });
             }
 
-            // กรองตามช่วงวันที่ (ใช้ resolved_at หรือถ้าไม่มีให้ใช้ created_at แทน)
             if (startDateVal || endDateVal) {
-                filtered = filtered.filter(item => {
+                baseFiltered = baseFiltered.filter(item => {
                     const dateToCheck = item.resolved_at || item.created_at;
                     const targetDateStr = dateToCheck ? dateToCheck.split('T')[0] : '';
                     if (!targetDateStr) return false;
@@ -192,19 +244,47 @@
                 });
             }
 
-            currentFilteredData = filtered;
-            updateDashboard(currentFilteredData);
+            // 2. กรองเพิ่มด้วย คะแนนดาว (สำหรับตารางและกราฟ)
+            let finalFiltered = baseFiltered;
+            if (scoreFilter !== 'all') {
+                const targetScore = parseInt(scoreFilter);
+                finalFiltered = finalFiltered.filter(item => item.satisfaction_score === targetScore);
+            }
+
+            updateDashboard(baseFiltered, finalFiltered);
         }
 
-        function updateDashboard(data) {
-            const total = data.length;
-            document.getElementById('totalEvaluated').textContent = `${total} รายการ`;
-            document.getElementById('tableCount').textContent = `แสดง ${total} รายการ`;
+        function updateDashboard(baseFiltered, finalFiltered) {
+            // คำนวณสถิติภาพรวม 4 ช่อง (จาก baseFiltered)
+            const totalAll = baseFiltered.length;
+            
+            // นับเคสที่ดำเนินการเสร็จสิ้น (รวมทั้งที่ประเมินแล้วและยังไม่ได้ประเมิน)
+            const totalResolved = baseFiltered.filter(i => 
+                i.status === 'เสร็จสิ้น' || 
+                i.status === 'ดำเนินการเสร็จสิ้น' || 
+                i.status === 'เสร็จเรียบร้อย' || 
+                (i.resolved_at !== null && i.resolved_at !== undefined && i.resolved_at !== '')
+            ).length;
+
+            // เคสที่ได้รับการประเมินแล้วในขอบเขตนี้
+            const ratedItemsInBase = baseFiltered.filter(i => i.satisfaction_score !== null && i.satisfaction_score !== undefined);
+            const totalRated = ratedItemsInBase.length;
+
+            // คำนวณเปอร์เซ็นต์การประเมินเทียบกับงานที่เสร็จสิ้น
+            const percent = totalResolved > 0 ? ((totalRated / totalResolved) * 100).toFixed(1) : 0;
+
+            document.getElementById('totalAll').textContent = `${totalAll} เรื่อง`;
+            document.getElementById('totalResolved').textContent = `${totalResolved} เรื่อง`;
+            document.getElementById('totalRated').textContent = `${totalRated} เรื่อง`;
+            document.getElementById('percentRated').textContent = `${percent}%`;
+
+            // กรองเฉพาะรายการที่มีคะแนนแล้ว สำหรับแสดงในกราฟและตาราง (ตาม finalFiltered)
+            const ratedDataForChart = finalFiltered.filter(i => i.satisfaction_score !== null && i.satisfaction_score !== undefined);
 
             let sumScore = 0;
             const scoreCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
-            data.forEach(item => {
+            ratedDataForChart.forEach(item => {
                 const score = item.satisfaction_score || 0;
                 sumScore += score;
                 if (scoreCounts[score] !== undefined) {
@@ -212,7 +292,7 @@
                 }
             });
 
-            const avg = total > 0 ? (sumScore / total).toFixed(2) : '0.00';
+            const avg = ratedDataForChart.length > 0 ? (sumScore / ratedDataForChart.length).toFixed(2) : '0.00';
             document.getElementById('avgScore').textContent = `${avg} / 5.00`;
 
             document.getElementById('scoreSummaryList').innerHTML = `
@@ -223,15 +303,17 @@
                 <div class="flex justify-between"><span>⭐ (1 ดาว):</span> <span class="font-semibold">${scoreCounts[1]} รายการ</span></div>
             `;
 
-            renderChart(scoreCounts);
+            renderChart(scoreCounts, ratedDataForChart.length);
 
             const tbody = document.getElementById('reportTableBody');
-            if (!data.length) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400">ไม่พบข้อมูลการประเมินในช่วงเวลานี้</td></tr>';
+            document.getElementById('tableCount').textContent = `แสดง ${ratedDataForChart.length} รายการ`;
+
+            if (!ratedDataForChart.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400">ไม่พบข้อมูลการประเมินตามเงื่อนไขที่เลือก</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = data.map(item => {
+            tbody.innerHTML = ratedDataForChart.map(item => {
                 const stars = '★'.repeat(item.satisfaction_score) + '☆'.repeat(5 - item.satisfaction_score);
                 return `
                     <tr class="hover:bg-slate-50">
@@ -245,7 +327,22 @@
             }).join('');
         }
 
-        function renderChart(counts) {
+        function renderChart(counts, total) {
+            const wrapper = document.getElementById('chartWrapper');
+
+            if (total === 0) {
+                if (myChart) {
+                    myChart.destroy();
+                    myChart = null;
+                }
+                wrapper.innerHTML = '<span class="text-xs font-medium text-slate-500 px-4">ยังไม่ได้รับการประเมินจากผู้ร้องเรียน</span>';
+                return;
+            }
+
+            if (!document.getElementById('satisfactionChart')) {
+                wrapper.innerHTML = '<canvas id="satisfactionChart"></canvas>';
+            }
+
             const ctx = document.getElementById('satisfactionChart').getContext('2d');
             
             if (myChart) {
@@ -272,21 +369,15 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false // ปิด Legend เดิมเพราะเราสร้างรายการด้านขวาเองแล้ว
-                        },
+                        legend: { display: false },
                         datalabels: {
                             color: '#fff',
-                            font: {
-                                family: 'Prompt',
-                                weight: 'bold',
-                                size: 11
-                            },
+                            font: { family: 'Prompt', weight: 'bold', size: 12 },
                             formatter: (value, ctx) => {
                                 let totalVal = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                if (totalVal === 0) return '';
+                                if (totalVal === 0 || value === 0) return '';
                                 let percentage = (value * 100 / totalVal).toFixed(0) + "%";
-                                return value > 0 ? percentage : '';
+                                return percentage;
                             }
                         }
                     }
@@ -298,6 +389,7 @@
             document.getElementById('startDate').value = '';
             document.getElementById('endDate').value = '';
             document.getElementById('scoreFilter').value = 'all';
+            document.getElementById('communityFilter').value = 'all';
             applyFilters();
         }
 
