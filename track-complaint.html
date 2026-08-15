@@ -154,6 +154,7 @@
                             <div>
                                 <span class="text-xs text-slate-400">วันที่แจ้งเรื่อง: ${formatDateOnly(item.created_at)}</span>
                                 <p class="text-xs text-slate-500 mt-0.5">หมวดหมู่: ${item.category || '-'}</p>
+                                <p class="text-xs text-slate-500 mt-0.5">🏘️ ชุมชน: ${item.community || '-'}</p>
                             </div>
                             <div>${statusBadge}</div>
                         </div>
@@ -171,7 +172,7 @@
                             </div>
                         ` : ''}
 
-                        <!-- รูปภาพประกอบ (เปลี่ยนข้อความตามที่ขอ) -->
+                        <!-- รูปภาพประกอบ -->
                         <div class="grid grid-cols-2 gap-3 pt-2">
                             <div>
                                 <p class="text-[10px] text-slate-400 mb-1">รูปภาพตอนแจ้งเรื่อง</p>
@@ -194,7 +195,7 @@
         function openRatingModal(id) {
             document.getElementById('ratingComplaintId').value = id;
             document.getElementById('ratingComment').value = '';
-            setRating(5); // ค่าเริ่มต้น 5 ดาว
+            setRating(5);
             document.getElementById('ratingModal').classList.remove('hidden');
         }
 
@@ -243,7 +244,7 @@
             } else {
                 alert('ขอบคุณสำหรับการประเมินความพึงพอใจครับ!');
                 closeRatingModal();
-                trackComplaint(); // โหลดข้อมูลใหม่เพื่อแสดงผลดาวที่กดแล้ว
+                trackComplaint();
             }
         }
     </script>
