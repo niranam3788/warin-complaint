@@ -23,7 +23,8 @@
             </a>
         </div>
         
-        <div class="grid grid-cols-2 gap-4">
+        <!-- ตัวกรองข้อมูล (เดือน, ปี, ชุมชน) -->
+        <div class="grid grid-cols-3 gap-2">
             <select id="filterMonth" class="p-2 border rounded text-sm text-slate-700">
                 <option value="">ทุกเดือน</option>
                 <option value="1">มกราคม</option>
@@ -41,24 +42,55 @@
             </select>
             <select id="filterYear" class="p-2 border rounded text-sm text-slate-700">
                 <option value="">ทุกปี (แสดงทั้งหมด)</option>
-                <!-- ปีจะถูกเพิ่มด้วย JavaScript ถึง 2590 -->
+            </select>
+            <select id="filterCommunity" class="p-2 border rounded text-sm text-slate-700">
+                <option value="">ทุกชุมชน</option>
             </select>
         </div>
 
         <!-- กราฟแสดงสถิติตามช่วงเวลา (รายวัน / รายเดือน) -->
-        <div>
+        <div class="pb-4">
             <p class="text-sm font-bold text-slate-600 mb-2" id="trendTitle">สถิติจำนวนเรื่องร้องเรียนตามช่วงเวลา</p>
             <canvas id="trendChart" style="max-height: 220px;"></canvas>
         </div>
 
-        <div>
+        <!-- กราฟแท่งเปรียบเทียบสถานะแยกตามหน่วยงาน -->
+        <div class="pb-4">
             <p class="text-sm font-bold text-slate-600 mb-2">เปรียบเทียบสถานะแยกตามหน่วยงาน</p>
             <canvas id="barChart" style="max-height: 250px;"></canvas>
         </div>
         
-        <div style="max-width: 380px; margin: auto;">
-            <p class="text-sm font-bold text-slate-600 mb-2 text-center">สัดส่วนเรื่องร้องเรียนแต่ละหน่วยงาน</p>
-            <canvas id="pieChart"></canvas>
+        <!-- กราฟวงกลม 1: สัดส่วนเรื่องร้องเรียนแต่ละหน่วยงาน -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <p class="text-sm font-bold text-slate-700 mb-3 text-center">สัดส่วนเรื่องร้องเรียนแต่ละหน่วยงาน</p>
+            <div class="grid grid-cols-12 gap-3 items-center">
+                <div class="col-span-5 relative" style="height: 210px;">
+                    <canvas id="pieChartDept"></canvas>
+                </div>
+                <div class="col-span-7 bg-white p-2 rounded border border-slate-100 shadow-sm grid grid-cols-2 gap-x-2 gap-y-1" id="legendDept" style="max-height: 210px; overflow-y-auto; font-size: 9px;"></div>
+            </div>
+        </div>
+
+        <!-- กราฟวงกลม 2: สัดส่วนเรื่องร้องเรียนแต่ละชุมชน -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <p class="text-sm font-bold text-slate-700 mb-3 text-center">สัดส่วนเรื่องร้องเรียนแต่ละชุมชน</p>
+            <div class="grid grid-cols-12 gap-3 items-center">
+                <div class="col-span-5 relative" style="height: 393px;">
+                    <canvas id="pieChartCommunity"></canvas>
+                </div>
+                <div class="col-span-7 bg-white p-2 rounded border border-slate-100 shadow-sm grid grid-cols-2 gap-x-2 gap-y-1" id="legendCommunity" style="max-height: 393px; overflow-y-auto; font-size: 9px;"></div>
+            </div>
+        </div>
+
+        <!-- กราฟวงกลม 3: สัดส่วนเรื่องร้องเรียนตามหมวดหมู่ -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 pb-6">
+            <p class="text-sm font-bold text-slate-700 mb-3 text-center">สัดส่วนเรื่องร้องเรียนตามหมวดหมู่</p>
+            <div class="grid grid-cols-12 gap-3 items-center">
+                <div class="col-span-5 relative" style="height: 210px;">
+                    <canvas id="pieChartCategory"></canvas>
+                </div>
+                <div class="col-span-7 bg-white p-2 rounded border border-slate-100 shadow-sm grid grid-cols-2 gap-x-2 gap-y-1" id="legendCategory" style="max-height: 210px; overflow-y-auto; font-size: 9px;"></div>
+            </div>
         </div>
     </div>
 
@@ -90,35 +122,121 @@
             let opt = document.createElement('option');
             opt.value = y - 543; 
             opt.innerHTML = y;
-            if (y === 2569) opt.selected = true; // ตั้งค่าเริ่มต้นเป็นปี 2569
+            if (y === 2569) opt.selected = true;
             yearSelect.appendChild(opt);
         }
 
         const _supabase = supabase.createClient('https://idgojpyhowjjphhanljt.supabase.co', 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2');
         const tags = ["สำนักปลัดเทศบาล", "กองคลัง", "กองยุทธศาสตร์ฯ", "กองสาธารณสุขฯ", "กองสวัสดิการสังคม", "กองการเจ้าหน้าที่", "กองช่าง", "กองช่างสุขา", "กองการศึกษา", "กลุ่มงานป้องกันฯ", "งานนิติการ", "สำนักทะเบียน", "พื้นที่นอกเขตรับผิดชอบ"];
         
+        const categories = [
+            "โครงสร้างพื้นฐาน",
+            "ไฟฟ้าแสงสว่าง",
+            "ความสะอาด/ขยะ",
+            "สุนัขจรจัด / สัตว์รบกวน",
+            "เหตุรำคาญ",
+            "อื่นๆ"
+        ];
+        const pieColors = ['#ef4444','#f97316','#eab308','#84cc16','#22c55e','#06b6d4','#3b82f6','#6366f1','#8b5cf6','#d946ef','#f43f5e','#71717a','#94a3b8'];
+        
+        const masterCommunities = [
+            "ท่ากอไผ่", "สุขสำราญ", "บูรณะ", "หาดสวนสุข", "หาดสวนสุข 1", "หาดสวนยา", "ดีงาม",
+            "ท่าบ้งมั่ง", "เกตุแก้ว", "กุดปลาขาว", "ดอนงิ้ว", "กุดเป่ง หมู่ 6", "กุดเป่ง หมู่ 16",
+            "ลับแล", "วัดวารินทราราม", "ห้าแยก", "ชลประทาน", "ต้นแต้", "แสนสำราญ", "คำน้ำแซ่บ",
+            "อยู่เย็น", "แหลมทอง", "หนองบก", "หนองกอก", "วัดผาสุการาม", "หนองตาโผ่น",
+            "บ้านสวนวาริน", "คูยาง", "ไม่ทราบ หรือ ไม่สามารถระบุได้"
+        ];
+
+        // ฟังก์ชันมาตรฐานสำหรับลบช่องว่างและอักขระพิเศษเพื่อให้เปรียบเทียบข้อมูลได้แม่นยำ 100%
+        function normalizeStr(str) {
+            if (!str) return "";
+            return str.toString().trim().replace(/\s+/g, '').replace(/\//g, '').replace(/-/g, '');
+        }
+
         let allData = [];
-        let barChart, pieChart, trendChart;
+        let barChart, pieChartDept, pieChartCommunity, pieChartCategory, trendChart;
         const map = L.map('map').setView([15.1934, 104.8715], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         async function loadData() {
             const { data } = await _supabase.from('complaints').select('*');
             allData = data || [];
+
+            const dbCommunities = [...new Set(allData.map(i => i.community ? i.community.trim() : '').filter(Boolean))];
+            let allCommunities = [...new Set([...masterCommunities, ...dbCommunities])];
+
+            const specialValue = "ไม่ทราบ หรือ ไม่สามารถระบุได้";
+            allCommunities.sort((a, b) => {
+                if (a === specialValue) return 1;
+                if (b === specialValue) return -1;
+                return a.localeCompare(b, 'th');
+            });
+
+            const commSelect = document.getElementById('filterCommunity');
+            commSelect.innerHTML = '<option value="">ทุกชุมชน</option>';
+            allCommunities.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c;
+                opt.innerHTML = c;
+                commSelect.appendChild(opt);
+            });
+
             updateDashboard();
+        }
+
+        function renderCustomLegend(chart, legendContainerId) {
+            const container = document.getElementById(legendContainerId);
+            container.innerHTML = '';
+            
+            const datasets = chart.data.datasets;
+            const data = datasets[0].data;
+            const total = data.reduce((acc, val) => acc + val, 0);
+
+            chart.data.labels.forEach((label, i) => {
+                const value = data[i] || 0;
+                const percentage = total > 0 && label !== 'ไม่มีเรื่องร้องเรียน' ? ((value / total) * 100).toFixed(1) + '%' : '';
+                const color = datasets[0].backgroundColor[i % datasets[0].backgroundColor.length];
+                const textDisplay = label === 'ไม่มีเรื่องร้องเรียน' ? label : `${label} (${value} - ${percentage})`;
+
+                const item = document.createElement('div');
+                item.className = 'flex items-center space-x-1.5 mb-1 cursor-pointer';
+                item.innerHTML = `
+                    <span style="background-color: ${color}; width: 8px; height: 8px; display: inline-block; flex-shrink: 0; border-radius: 2px;"></span>
+                    <span class="text-slate-600 truncate">${textDisplay}</span>
+                `;
+                
+                item.onclick = () => {
+                    const meta = chart.getDatasetMeta(0);
+                    const result = meta.data[i];
+                    if (result.hidden) {
+                        result.hidden = false;
+                        item.style.opacity = '1';
+                    } else {
+                        result.hidden = true;
+                        item.style.opacity = '0.4';
+                    }
+                    chart.update();
+                };
+                
+                container.appendChild(item);
+            });
         }
 
         function updateDashboard() {
             const month = document.getElementById('filterMonth').value;
             const year = document.getElementById('filterYear').value;
+            const community = document.getElementById('filterCommunity').value;
             
             const filtered = allData.filter(i => {
                 if (!i.created_at) return false;
                 const d = new Date(i.created_at);
-                return (!month || (d.getMonth() + 1) == month) && (!year || d.getFullYear() == year);
+                const matchMonth = !month || (d.getMonth() + 1) == month;
+                const matchYear = !year || d.getFullYear() == year;
+                const matchCommunity = !community || (i.community && normalizeStr(i.community) === normalizeStr(community));
+                return matchMonth && matchYear && matchCommunity;
             });
 
-            // --- 1. Render Trend Chart (กราฟแสดงตามช่วงเวลา: รายวัน หรือ รายเดือน) ---
+            // --- 1. Render Trend Chart ---
             let trendLabels = [];
             let trendData = [];
             
@@ -134,11 +252,8 @@
                 } else if ([4, 6, 9, 11].includes(mNum)) {
                     daysCount = 30;
                 } else if (mNum === 2) {
-                    if (leapThYears.includes(currentThYear)) {
-                        daysCount = 29;
-                    } else {
-                        daysCount = 28;
-                    }
+                    if (leapThYears.includes(currentThYear)) daysCount = 29;
+                    else daysCount = 28;
                 }
 
                 trendLabels = Array.from({length: daysCount}, (_, i) => (i + 1).toString());
@@ -170,30 +285,23 @@
                 plugins: [ChartDataLabels],
                 data: {
                     labels: trendLabels,
-                    datasets: [{
-                        label: 'จำนวนเรื่อง',
-                        data: trendData,
-                        backgroundColor: '#6366f1'
-                    }]
+                    datasets: [{ label: 'จำนวนเรื่อง', data: trendData, backgroundColor: '#6366f1' }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         datalabels: { anchor: 'end', align: 'top', color: '#475569', font: { size: 9 } },
                         legend: { display: false }
                     },
                     scales: {
                         x: { ticks: { font: { size: 9 } } },
-                        y: {
-                            beginAtZero: true,
-                            max: topTrendLimit,
-                            ticks: { stepSize: 1 }
-                        }
+                        y: { beginAtZero: true, max: topTrendLimit, ticks: { stepSize: 1 } }
                     }
                 }
             });
 
-            // --- 2. Render Bar Chart (เปรียบเทียบสถานะแยกตามหน่วยงาน) ---
+            // --- 2. Render Bar Chart ---
             const totalData = tags.map(t => filtered.filter(i => i.department_tags?.includes(t)).length);
             const pendingData = tags.map(t => filtered.filter(i => i.department_tags?.includes(t) && i.status === 'pending').length);
             
@@ -210,52 +318,129 @@
                 ]},
                 options: { 
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: { 
                         datalabels: { anchor: 'end', align: 'top', color: '#475569', font: { size: 10 } }, 
-                        legend: { position: 'bottom' } 
+                        legend: { position: 'bottom', labels: { font: { size: 10 } } } 
                     },
                     scales: { 
                         x: { ticks: { maxRotation: 90, minRotation: 90, font: { size: 10 } } },
-                        y: { 
-                            beginAtZero: true,
-                            max: topBarLimit,
-                            ticks: { stepSize: 1 }
-                        } 
+                        y: { beginAtZero: true, max: topBarLimit, ticks: { stepSize: 1 } } 
                     }
                 }
             });
 
-            // --- 3. Render Pie Chart (สัดส่วนแต่ละหน่วยงาน) ---
-            if(pieChart) pieChart.destroy();
-            pieChart = new Chart(document.getElementById('pieChart'), {
+            const pieOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 10 },
+                        formatter: (value, ctx) => {
+                            const label = ctx.chart.data.labels[ctx.dataIndex];
+                            if (label === 'ไม่มีเรื่องร้องเรียน') return '';
+                            const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            if (total === 0 || value === 0) return '';
+                            return ((value / total) * 100).toFixed(1) + '%';
+                        }
+                    }
+                }
+            };
+
+            // --- 3. Render Pie Chart 1 (หน่วยงาน) ---
+            if(pieChartDept) pieChartDept.destroy();
+            pieChartDept = new Chart(document.getElementById('pieChartDept'), {
                 type: 'pie',
                 plugins: [ChartDataLabels],
-                data: { 
-                    labels: tags, 
-                    datasets: [{ 
-                        data: totalData, 
-                        backgroundColor: ['#ef4444','#f97316','#eab308','#84cc16','#22c55e','#06b6d4','#3b82f6','#6366f1','#8b5cf6','#d946ef','#f43f5e','#71717a','#94a3b8'] 
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    plugins: { 
-                        legend: { display: false }, 
-                        datalabels: {
-                            color: '#fff',
-                            font: { weight: 'bold', size: 11 },
-                            formatter: (value, ctx) => {
-                                if (value === 0) return ''; 
-                                const label = ctx.chart.data.labels[ctx.dataIndex];
-                                return `${label}\n(${value})`; 
-                            },
-                            textAlign: 'center'
-                        }
-                    } 
-                }
+                data: { labels: tags, datasets: [{ data: totalData, backgroundColor: pieColors }] },
+                options: pieOptions
+            });
+            renderCustomLegend(pieChartDept, 'legendDept');
+
+            // --- 4. Render Pie Chart 2 (ชุมชน) ---
+            const dbComms = [...new Set(allData.map(i => i.community ? i.community.trim() : '').filter(Boolean))];
+            let allCommsList = [...new Set([...masterCommunities, ...dbComms])];
+            
+            const specialValue = "ไม่ทราบ หรือ ไม่สามารถระบุได้";
+            allCommsList.sort((a, b) => {
+                if (a === specialValue) return 1;
+                if (b === specialValue) return -1;
+                return a.localeCompare(b, 'th');
             });
 
-            // --- 4. Render Map Markers ---
+            const commCounts = allCommsList.map(c => filtered.filter(i => i.community && normalizeStr(i.community) === normalizeStr(c)).length);
+            const totalCommSum = commCounts.reduce((a, b) => a + b, 0);
+
+            let pieCommLabels = [];
+            let pieCommData = [];
+            let pieCommColors = [];
+
+            if (totalCommSum === 0) {
+                pieCommLabels = ['ไม่มีเรื่องร้องเรียน'];
+                pieCommData = [1];
+                pieCommColors = ['#cbd5e1'];
+            } else {
+                allCommsList.forEach((c, idx) => {
+                    const count = filtered.filter(i => i.community && normalizeStr(i.community) === normalizeStr(c)).length;
+                    if (count > 0) {
+                        pieCommLabels.push(c);
+                        pieCommData.push(count);
+                        pieCommColors.push(pieColors[idx % pieColors.length]);
+                    }
+                });
+            }
+
+            if(pieChartCommunity) pieChartCommunity.destroy();
+            pieChartCommunity = new Chart(document.getElementById('pieChartCommunity'), {
+                type: 'pie',
+                plugins: [ChartDataLabels],
+                data: { labels: pieCommLabels, datasets: [{ data: pieCommData, backgroundColor: pieCommColors }] },
+                options: pieOptions
+            });
+            renderCustomLegend(pieChartCommunity, 'legendCommunity');
+
+            // --- 5. Render Pie Chart 3 (หมวดหมู่) ---
+            const categoryCounts = categories.map(cat => {
+                return filtered.filter(i => {
+                    if (!i.category) return false;
+                    const dbCatN = normalizeStr(i.category);
+                    const catN = normalizeStr(cat);
+                    return dbCatN.includes(catN) || catN.includes(dbCatN);
+                }).length;
+            });
+
+            const totalCategorySum = categoryCounts.reduce((a, b) => a + b, 0);
+            let pieCatLabels = [];
+            let pieCatData = [];
+            let pieCatColors = [];
+
+            if (totalCategorySum === 0) {
+                pieCatLabels = ['ไม่มีเรื่องร้องเรียน'];
+                pieCatData = [1];
+                pieCatColors = ['#cbd5e1'];
+            } else {
+                categories.forEach((cat, idx) => {
+                    const count = categoryCounts[idx];
+                    if (count > 0) {
+                        pieCatLabels.push(cat);
+                        pieCatData.push(count);
+                        pieCatColors.push(pieColors[idx % pieColors.length]);
+                    }
+                });
+            }
+
+            if(pieChartCategory) pieChartCategory.destroy();
+            pieChartCategory = new Chart(document.getElementById('pieChartCategory'), {
+                type: 'pie',
+                plugins: [ChartDataLabels],
+                data: { labels: pieCatLabels, datasets: [{ data: pieCatData, backgroundColor: pieCatColors }] },
+                options: pieOptions
+            });
+            renderCustomLegend(pieChartCategory, 'legendCategory');
+
+            // --- 6. Render Map Markers ---
             map.eachLayer(layer => { if(layer.options && layer.options.className === 'custom-pin') map.removeLayer(layer); });
             filtered.forEach(item => {
                 if(item.latitude && item.longitude) {
@@ -267,7 +452,7 @@
                             iconSize: [18, 18],
                             iconAnchor: [9, 18]
                         })
-                    }).addTo(map).bindPopup(`<b>${item.title}</b><br>สถานะ: ${item.status === 'pending' ? 'รอดำเนินการ' : 'เสร็จสิ้น'}`);
+                    }).addTo(map).bindPopup(`<b>${item.title}</b><br>ชุมชน: ${item.community || '-'}<br>สถานะ: ${item.status === 'pending' ? 'รอดำเนินการ' : 'เสร็จสิ้น'}`);
                 }
             });
         }
