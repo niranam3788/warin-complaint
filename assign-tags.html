@@ -33,11 +33,29 @@
             </a>
         </div>
 
-        <!-- แถบกรองข้อมูลสถานะ Tag -->
-        <div class="p-3 bg-slate-50 border-b border-slate-200 flex gap-1.5 justify-between">
-            <button onclick="filterComplaints('all')" id="btn-all" class="flex-1 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-white transition shadow-sm">ทั้งหมด</button>
-            <button onclick="filterComplaints('tagged')" id="btn-tagged" class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition">ติด Tag แล้ว</button>
-            <button onclick="filterComplaints('untagged')" id="btn-untagged" class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition">ยังไม่ติด Tag</button>
+        <!-- แถบกรองข้อมูล -->
+        <div class="p-3 bg-slate-50 border-b border-slate-200 space-y-2">
+            <!-- กรองตามสถานะ Tag -->
+            <div class="flex gap-1.5 justify-between">
+                <button onclick="filterComplaints('all')" id="btn-all" class="flex-1 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-white transition shadow-sm">ทั้งหมด</button>
+                <button onclick="filterComplaints('tagged')" id="btn-tagged" class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition">ติด Tag แล้ว</button>
+                <button onclick="filterComplaints('untagged')" id="btn-untagged" class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition">ยังไม่ติด Tag</button>
+            </div>
+            <!-- กรองตามวันที่ + ปุ่มล้างข้อมูล -->
+            <div class="space-y-1">
+                <div class="flex justify-between items-center">
+                    <label class="text-[10px] text-slate-500 font-bold">กรองตามช่วงวันที่แจ้ง</label>
+                    <button onclick="clearDateFilter()" class="text-[10px] text-blue-600 hover:text-blue-800 font-semibold underline">ล้างข้อมูลวันที่</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <input type="date" id="startDate" onchange="applyFilter()" class="w-full p-1.5 text-xs border rounded-lg">
+                    </div>
+                    <div>
+                        <input type="date" id="endDate" onchange="applyFilter()" class="w-full p-1.5 text-xs border rounded-lg">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- รายการคำร้อง -->
@@ -51,16 +69,13 @@
         <div id="map"></div>
     </div>
 
-    <!-- Modal สำหรับเลือก Tag (ปรับ z-index เป็น z-[9999] ให้ลอยอยู่บนสุดเสมอ) -->
+    <!-- Modal สำหรับเลือก Tag -->
     <div id="tagModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[9999]">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
             <h3 class="text-lg font-bold text-slate-800">🏷️ เลือกกอง/ฝ่ายที่รับผิดชอบ</h3>
             <p class="text-xs text-slate-500">ตรวจสอบตำแหน่งจากแผนที่แล้วเลือกหน่วยงานที่เกี่ยวข้อง (สามารถเลือกได้มากกว่า 1)</p>
-            
             <input type="hidden" id="currentComplaintId">
-
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1" id="departmentCheckboxContainer"></div>
-
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button onclick="closeTagModal()" class="px-4 py-2 text-xs font-medium bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl transition">ยกเลิก</button>
                 <button onclick="saveTags()" class="px-4 py-2 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition shadow-sm">บันทึก Tag</button>
@@ -77,11 +92,7 @@
         let currentFilter = 'all';
 
         const map = L.map('map').setView([15.1934, 104.8715], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         const markersLayer = L.layerGroup().addTo(map);
 
         const DEPARTMENTS = [
@@ -111,19 +122,40 @@
             currentFilter = type;
             ['all', 'tagged', 'untagged'].forEach(t => {
                 const btn = document.getElementById(`btn-${t}`);
-                if (t === type) {
-                    btn.className = "flex-1 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-white transition shadow-sm";
-                } else {
-                    btn.className = "flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition";
-                }
+                btn.className = (t === type) 
+                    ? "flex-1 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-white transition shadow-sm"
+                    : "flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition";
             });
+            applyFilter();
+        }
+
+        function clearDateFilter() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
             applyFilter();
         }
 
         function applyFilter() {
             let filtered = allData;
-            if (currentFilter === 'tagged') filtered = allData.filter(item => item.department_tags && item.department_tags.trim() !== "");
-            if (currentFilter === 'untagged') filtered = allData.filter(item => !item.department_tags || item.department_tags.trim() === "");
+            
+            // กรองสถานะ Tag
+            if (currentFilter === 'tagged') filtered = filtered.filter(item => item.department_tags && item.department_tags.trim() !== "");
+            if (currentFilter === 'untagged') filtered = filtered.filter(item => !item.department_tags || item.department_tags.trim() === "");
+            
+            // กรองวันที่
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            
+            if (start) {
+                const startDate = new Date(start);
+                filtered = filtered.filter(i => new Date(i.created_at) >= startDate);
+            }
+            if (end) {
+                const endDate = new Date(end);
+                endDate.setHours(23, 59, 59); // ครอบคลุมถึงสิ้นวัน
+                filtered = filtered.filter(i => new Date(i.created_at) <= endDate);
+            }
+            
             renderListAndMap(filtered);
         }
 
@@ -133,7 +165,7 @@
             markersLayer.clearLayers();
 
             if (data.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-slate-400 text-xs">ไม่พบรายการคำร้อง</div>';
+                container.innerHTML = '<div class="text-center py-10 text-slate-400 text-xs">ไม่พบรายการคำร้องตามเงื่อนไข</div>';
                 return;
             }
             
@@ -147,20 +179,15 @@
                 let marker = null;
                 if (item.latitude && item.longitude) {
                     marker = L.marker([item.latitude, item.longitude]);
-                    const popupContent = `
+                    marker.bindPopup(`
                         <div class="p-2 max-w-[220px]">
                             <div class="flex gap-1 mb-1 flex-wrap">${tagsHtml}</div>
                             <h3 class="font-bold text-xs text-slate-800">${item.title}</h3>
-                            <p class="text-[11px] text-slate-600 mt-1">${item.description || '-'}</p>
-                            <div class="mt-2 pt-2 border-t text-[10px] text-slate-500">
-                                แจ้งเมื่อ: ${new Date(item.created_at).toLocaleString('th-TH')}
-                            </div>
-                            <button onclick='openTagModal("${item.id}", ${JSON.stringify(tags)})' class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-medium py-1 px-2 rounded transition shadow-sm">
-                                ⚙️ จัดการ Tag
-                            </button>
+                            <p class="text-[11px] text-slate-600 mt-1">🏘️ ชุมชน: <span class="font-medium text-slate-700">${item.community || 'ไม่ระบุ'}</span></p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">แจ้งเมื่อ: ${new Date(item.created_at).toLocaleString('th-TH')}</p>
+                            <button onclick='openTagModal("${item.id}", ${JSON.stringify(tags)})' class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-medium py-1 px-2 rounded transition shadow-sm">⚙️ จัดการ Tag</button>
                         </div>
-                    `;
-                    marker.bindPopup(popupContent);
+                    `);
                     markersLayer.addLayer(marker);
                 }
 
@@ -172,19 +199,17 @@
                         <button onclick='event.stopPropagation(); openTagModal("${item.id}", ${JSON.stringify(tags)})' class="text-blue-600 hover:text-blue-800 text-[11px] font-semibold px-2 py-0.5 bg-blue-50 rounded-lg">⚙️ แก้ไข Tag</button>
                     </div>
                     <h4 class="font-bold text-xs text-slate-800">${item.title}</h4>
-                    <p class="text-[11px] text-slate-500 line-clamp-1">${item.description || '-'}</p>
+                    <p class="text-[11px] text-slate-600 font-medium">🏘️ ${item.community || 'ไม่ระบุชุมชน'}</p>
                     <div class="flex flex-wrap gap-1 pt-1">${tagsHtml}</div>
+                    <p class="text-[10px] text-slate-400">📅 ${new Date(item.created_at).toLocaleDateString('th-TH')}</p>
                 `;
 
-                card.addEventListener('click', () => {
+                card.onclick = () => {
                     if (item.latitude && item.longitude && marker) {
                         map.setView([item.latitude, item.longitude], 16);
                         marker.openPopup();
-                    } else {
-                        alert('เคสนี้ไม่มีพิกัดตำแหน่งบนแผนที่');
                     }
-                });
-
+                };
                 container.appendChild(card);
             });
         }
