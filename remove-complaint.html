@@ -10,7 +10,7 @@
     <style>body { font-family: 'Prompt', sans-serif; }</style>
 </head>
 <body class="bg-slate-50 min-h-screen p-6">
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         <!-- หัวข้อหน้าจอและปุ่มกลับเมนู -->
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
@@ -21,6 +21,51 @@
             </a>
         </div>
         
+        <!-- แผงตัวกรองข้อมูล (Filter Section) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3">
+            <!-- ค้นหาจากคำร้อง (หัวข้อเรื่อง หรือ ชุมชน) -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">🔍 ค้นหาคำร้อง</label>
+                <input type="text" id="filterSearch" placeholder="พิมพ์หัวข้อหรือชุมชน..." class="w-full p-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- กรองจาก กอง/ฝ่าย (Tag) -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">🏷️ กอง/ฝ่าย</label>
+                <select id="filterTag" class="w-full p-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">ทุกกอง/ฝ่าย</option>
+                </select>
+            </div>
+
+            <!-- กรองจากชุมชน -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">🏠 ชุมชน</label>
+                <select id="filterCommunity" class="w-full p-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">ทุกชุมชน</option>
+                </select>
+            </div>
+
+            <!-- กรองจากสถานะ -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">📌 สถานะการดำเนินการ</label>
+                <select id="filterStatus" class="w-full p-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">ทุกสถานะ</option>
+                    <option value="resolved">ปิดงานแล้ว</option>
+                    <option value="pending">รอดำเนินการ</option>
+                </select>
+            </div>
+
+            <!-- กรองจากช่วงวันที่ (ตั้งแต่วันที่ - ถึงวันที่) -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">📅 ช่วงวันที่แจ้ง</label>
+                <div class="flex items-center space-x-1">
+                    <input type="date" id="filterStartDate" class="w-1/2 p-2 border border-slate-300 rounded-xl text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500" title="จากวันที่">
+                    <span class="text-slate-400 text-xs">-</span>
+                    <input type="date" id="filterEndDate" class="w-1/2 p-2 border border-slate-300 rounded-xl text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500" title="ถึงวันที่">
+                </div>
+            </div>
+        </div>
+
         <!-- ตารางจัดการข้อมูล -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <table class="w-full text-sm text-left">
@@ -28,6 +73,8 @@
                     <tr>
                         <th class="px-6 py-4">วันที่แจ้ง</th>
                         <th class="px-6 py-4">เรื่อง</th>
+                        <th class="px-6 py-4">ชุมชน</th>
+                        <th class="px-6 py-4">กอง/ฝ่าย</th>
                         <th class="px-6 py-4">สถานะ</th>
                         <th class="px-6 py-4 text-center">จัดการ</th>
                     </tr>
@@ -44,7 +91,30 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ฟังก์ชันลบข้อมูล (มีแจ้งเตือนก่อนลบ)
+        let allData = []; 
+
+        // รายการ Tag หลัก
+        const predefinedTags = [
+            "สำนักปลัดเทศบาล", "กองคลัง", "กองยุทธศาสตร์ฯ", "กองสาธารณสุขฯ", 
+            "กองสวัสดิการสังคม", "กองการเจ้าหน้าที่", "กองช่าง", "กองช่างสุขา", 
+            "กองการศึกษา", "กลุ่มงานป้องกันฯ", "งานนิติการ", "สำนักทะเบียน", "พื้นที่นอกเขตรับผิดชอบ"
+        ];
+
+        // รายการชุมชน
+        const masterCommunities = [
+            "กุดปลาขาว", "กุดเป่ง หมู่ 16", "กุดเป่ง หมู่ 6", "เกตุแก้ว", "คำน้ำแซ่บ", 
+            "คูยาง", "ชลประทาน", "ดอนงิ้ว", "ดีงาม", "ต้นแต้", "ท่ากอไผ่", "ท่าบ้งมั่ง", 
+            "บูรณะ", "บ้านสวนวาริน", "ลับแล", "วัดผาสุการาม", "วัดวารินทราราม", "สุขสำราญ", 
+            "แสนสำราญ", "หาดสวนยา", "หาดสวนสุข", "หาดสวนสุข 1", "ห้าแยก", "หนองกอก", 
+            "หนองตาโผ่น", "หนองบก", "แหลมทอง", "อยู่เย็น", "ไม่ทราบ หรือ ไม่สามารถระบุได้"
+        ];
+
+        function normalizeStr(str) {
+            if (!str) return "";
+            return str.toString().trim().replace(/\s+/g, '').replace(/\//g, '').replace(/-/g, '');
+        }
+
+        // ฟังก์ชันลบข้อมูล
         async function deleteComplaint(id, title) {
             const isConfirmed = confirm(`⚠️ คำเตือน! คุณแน่ใจหรือไม่ว่าจะลบเรื่องร้องเรียนนี้?\nหัวข้อ: "${title}"\nการกระทำนี้ไม่สามารถย้อนกลับได้`);
             
@@ -59,11 +129,11 @@
                 alert('เกิดข้อผิดพลาดในการลบ: ' + error.message);
             } else {
                 alert('ลบข้อมูลเรียบร้อยแล้ว');
-                loadAdminData(); // โหลดรายการใหม่หลังลบ
+                loadAdminData(); 
             }
         }
 
-        // ฟังก์ชันดึงข้อมูลมาแสดงผล
+        // ฟังก์ชันดึงข้อมูลทั้งหมดและเซ็ตค่า Dropdown ต่างๆ
         async function loadAdminData() {
             const { data, error } = await _supabase
                 .from('complaints')
@@ -75,25 +145,167 @@
                 return;
             }
 
-            const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = data.map(item => `
-                <tr class="hover:bg-slate-50">
-                    <td class="px-6 py-4 text-xs text-slate-500">${new Date(item.created_at).toLocaleDateString('th-TH')}</td>
-                    <td class="px-6 py-4 font-medium text-slate-800">${item.title}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-[10px] font-semibold rounded-full ${item.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                            ${item.status === 'resolved' ? 'ปิดงานแล้ว' : 'รอดำเนินการ'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="deleteComplaint('${item.id}', '${item.title.replace(/"/g, '\\"')}')" 
-                                class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-medium py-1.5 px-3 rounded-lg transition text-xs">
-                            🗑️ ลบ
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            allData = data || [];
+            
+            // 1. ตั้งค่า Dropdown กอง/ฝ่าย (Tags)
+            const tagSet = new Set(predefinedTags);
+            allData.forEach(item => {
+                if (item.department_tags) {
+                    if (Array.isArray(item.department_tags)) {
+                        item.department_tags.forEach(t => tagSet.add(t.trim()));
+                    } else {
+                        item.department_tags.split(',').forEach(t => tagSet.add(t.trim()));
+                    }
+                }
+            });
+
+            const tagSelect = document.getElementById('filterTag');
+            const currentSelectedTag = tagSelect.value;
+            tagSelect.innerHTML = '<option value="">ทุกกอง/ฝ่าย</option>';
+            tagSet.forEach(tag => {
+                let opt = document.createElement('option');
+                opt.value = tag;
+                opt.textContent = tag;
+                if (tag === currentSelectedTag) opt.selected = true;
+                tagSelect.appendChild(opt);
+            });
+
+            // 2. ตั้งค่า Dropdown ชุมชน
+            const dbCommunities = [...new Set(allData.map(i => i.community ? i.community.trim() : '').filter(Boolean))];
+            let allCommunities = [...new Set([...masterCommunities, ...dbCommunities])];
+            const specialValue = "ไม่ทราบ หรือ ไม่สามารถระบุได้";
+            
+            allCommunities.sort((a, b) => {
+                if (a === specialValue) return 1;
+                if (b === specialValue) return -1;
+                return a.localeCompare(b, 'th');
+            });
+
+            const commSelect = document.getElementById('filterCommunity');
+            const currentSelectedComm = commSelect.value;
+            commSelect.innerHTML = '<option value="">ทุกชุมชน</option>';
+            allCommunities.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                if (c === currentSelectedComm) opt.selected = true;
+                commSelect.appendChild(opt);
+            });
+
+            filterAndRenderData();
         }
+
+        // ฟังก์ชันกรองข้อมูลแบบเงื่อนไขรวม
+        function filterAndRenderData() {
+            const searchText = document.getElementById('filterSearch').value.toLowerCase();
+            const selectedTag = document.getElementById('filterTag').value;
+            const selectedCommunity = document.getElementById('filterCommunity').value;
+            const selectedStatus = document.getElementById('filterStatus').value;
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+
+            const filtered = allData.filter(item => {
+                // 1. กรองจากคำร้อง (ค้นหาได้ทั้งหัวข้อเรื่อง และ ชุมชน)
+                let matchSearch = true;
+                if (searchText) {
+                    const titleMatch = item.title && item.title.toLowerCase().includes(searchText);
+                    const communityMatch = item.community && item.community.toLowerCase().includes(searchText);
+                    matchSearch = titleMatch || communityMatch;
+                }
+
+                // 2. กรองจาก กอง/ฝ่าย (Tag)
+                let matchTag = true;
+                if (selectedTag) {
+                    if (Array.isArray(item.department_tags)) {
+                        matchTag = item.department_tags.includes(selectedTag);
+                    } else if (item.department_tags) {
+                        matchTag = item.department_tags.includes(selectedTag);
+                    } else {
+                        matchTag = false;
+                    }
+                }
+
+                // 3. กรองจากชุมชน (Dropdown)
+                let matchCommunity = true;
+                if (selectedCommunity) {
+                    matchCommunity = item.community && normalizeStr(item.community) === normalizeStr(selectedCommunity);
+                }
+
+                // 4. กรองจากสถานะ
+                let matchStatus = true;
+                if (selectedStatus) {
+                    if (selectedStatus === 'resolved') {
+                        matchStatus = item.status === 'resolved' || item.status === 'completed' || item.status === 'success' || item.status === 'finished';
+                    } else {
+                        matchStatus = item.status === 'pending' || !item.status;
+                    }
+                }
+
+                // 5. กรองจากช่วงวันที่
+                let matchDate = true;
+                if (item.created_at) {
+                    const itemDate = item.created_at.split('T')[0]; 
+                    if (startDate && itemDate < startDate) matchDate = false;
+                    if (endDate && itemDate > endDate) matchDate = false;
+                }
+
+                return matchSearch && matchTag && matchCommunity && matchStatus && matchDate;
+            });
+
+            renderTable(filtered);
+        }
+
+        // ฟังก์ชันแสดงผลตาราง HTML
+        function renderTable(data) {
+            const tbody = document.getElementById('adminTableBody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">ไม่พบข้อมูลที่ตรงกับเงื่อนไขการกรอง</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                const isResolved = item.status === 'resolved' || item.status === 'completed' || item.status === 'success' || item.status === 'finished';
+                
+                // จัดการแปลงค่า department_tags ให้แสดงผลสวยงาม
+                let displayTags = '-';
+                if (item.department_tags) {
+                    if (Array.isArray(item.department_tags)) {
+                        displayTags = item.department_tags.join(', ');
+                    } else {
+                        displayTags = item.department_tags;
+                    }
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-4 text-xs text-slate-500">${new Date(item.created_at).toLocaleDateString('th-TH')}</td>
+                        <td class="px-6 py-4 font-medium text-slate-800">${item.title}</td>
+                        <td class="px-6 py-4 text-xs text-slate-600">${item.community || '-'}</td>
+                        <td class="px-6 py-4 text-xs text-slate-600">${displayTags}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 text-[10px] font-semibold rounded-full ${isResolved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                ${isResolved ? 'ปิดงานแล้ว' : 'รอดำเนินการ'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="deleteComplaint('${item.id}', '${item.title.replace(/"/g, '\\"')}')" 
+                                    class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-medium py-1.5 px-3 rounded-lg transition text-xs">
+                                🗑️ ลบ
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ผูก Event listener กับช่องกรองทั้งหมด
+        document.getElementById('filterSearch').addEventListener('input', filterAndRenderData);
+        document.getElementById('filterTag').addEventListener('change', filterAndRenderData);
+        document.getElementById('filterCommunity').addEventListener('change', filterAndRenderData);
+        document.getElementById('filterStatus').addEventListener('change', filterAndRenderData);
+        document.getElementById('filterStartDate').addEventListener('change', filterAndRenderData);
+        document.getElementById('filterEndDate').addEventListener('change', filterAndRenderData);
 
         // เริ่มโหลดข้อมูลเมื่อเปิดหน้าเว็บ
         loadAdminData();
