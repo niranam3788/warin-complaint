@@ -12,7 +12,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Google Fonts (Prompt สำหรับหน้าเว็บปกติ) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Prompt', sans-serif; }</style>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        
+        /* สไตล์สำหรับการซูมภาพและการลากใน Modal */
+        #imageContainer {
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 80vh;
+            cursor: grab;
+            position: relative;
+        }
+        #imageContainer:active {
+            cursor: grabbing;
+        }
+        #zoomableImage {
+            transition: transform 0.05s ease-out;
+            transform-origin: center center;
+            user-select: none;
+            -webkit-user-drag: none;
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-6">
     <div class="max-w-6xl mx-auto">
@@ -161,6 +187,20 @@
         </div>
     </div>
 
+    <!-- Modal สำหรับขยายภาพและซูม -->
+    <div id="imageModal" class="hidden fixed inset-0 bg-black/80 flex flex-col items-center justify-center p-4 z-50">
+        <div class="absolute top-4 right-4 flex items-center gap-2 z-10">
+            <button onclick="zoomIn()" class="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-full backdrop-blur-md transition text-sm font-bold" title="ซูมเข้า">➕</button>
+            <button onclick="zoomOut()" class="bg-white/20 hover:bg-white/30 text-white p-2.5 rounded-full backdrop-blur-md transition text-sm font-bold" title="ซูมออก">➖</button>
+            <button onclick="resetZoom()" class="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-full backdrop-blur-md transition text-xs font-semibold" title="รีเซ็ตขนาด">รีเซ็ต</button>
+            <button onclick="closeImageModal()" class="bg-red-600/80 hover:bg-red-600 text-white w-9 h-9 rounded-full flex items-center justify-center transition text-lg font-bold ml-2" title="ปิด">×</button>
+        </div>
+        <div id="imageContainer" class="relative">
+            <img id="zoomableImage" src="" alt="ขยายภาพ">
+        </div>
+        <p class="text-white/70 text-xs mt-3 text-center">💡 ใช้ลูกกลิ้งเมาส์ซูมเข้า-ออก | กดเมาส์ค้างแล้วลากเพื่อเลื่อนดูส่วนต่างๆ ของภาพได้</p>
+    </div>
+
     <!-- ส่วนสำหรับแปลงร่างเป็น PDF -->
     <div style="display: none;">
         <div id="pdfReportContent" style="padding: 10px; font-family: 'Tahoma', sans-serif; color: #000; background: #fff; width: 100%;">
@@ -197,6 +237,60 @@
         let allMasterData = [];
         let currentFilteredData = [];
         let currentViewMode = 'resolved';
+
+        // ตัวแปรสำหรับระบบซูมและลากภาพ
+        let currentScale = 1;
+        let posX = 0;
+        let posY = 0;
+        let isDragging = false;
+        let startX, startY;
+
+        const img = document.getElementById('zoomableImage');
+        const container = document.getElementById('imageContainer');
+
+        // ควบคุมการซูมด้วยลูกกลิ้งเมาส์ (Mouse Wheel Zoom)
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.2 : 0.2;
+            let newScale = Math.min(Math.max(1, currentScale + delta), 5);
+            
+            if (newScale === 1) {
+                posX = 0;
+                posY = 0;
+            }
+            currentScale = newScale;
+            updateTransform();
+        });
+
+        // ควบคุมการคลิกค้างแล้วลากเพื่อเลื่อนภาพ (Drag to Pan)
+        container.addEventListener('mousedown', (e) => {
+            if (currentScale <= 1) return;
+            isDragging = true;
+            startX = e.clientX - posX;
+            startY = e.clientY - posY;
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            posX = e.clientX - startX;
+            posY = e.clientY - startY;
+
+            const maxTranslateX = (img.clientWidth * currentScale) / 2;
+            const maxTranslateY = (img.clientHeight * currentScale) / 2;
+            
+            posX = Math.max(Math.min(posX, maxTranslateX), -maxTranslateX);
+            posY = Math.max(Math.min(posY, maxTranslateY), -maxTranslateY);
+
+            updateTransform();
+        });
+
+        function updateTransform() {
+            img.style.transform = `translate(${posX}px, ${posY}px) scale(${currentScale})`;
+        }
 
         function formatDateOnly(dateString) {
             if (!dateString) return '-';
@@ -366,19 +460,61 @@
                             </div>
                         </div>
 
+                        <!-- รูปภาพประกอบพร้อมปุ่มคลิกขยาย -->
                         <div class="px-5 pb-5 grid grid-cols-2 gap-2">
                             <div>
-                                <p class="text-[10px] text-slate-400 mb-1">รูปตอนแจ้งเรื่อง</p>
-                                ${item.image_url ? `<img src="${item.image_url}" class="w-full h-28 object-cover rounded-lg border">` : '<div class="w-full h-28 bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400">ไม่มีรูป</div>'}
+                                <p class="text-[10px] text-slate-400 mb-1">รูปตอนแจ้งเรื่อง (คลิกดูภาพใหญ่)</p>
+                                ${item.image_url ? `<img src="${item.image_url}" onclick="openImageModal('${item.image_url}')" class="w-full h-28 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition shadow-sm" title="คลิกเพื่อขยายภาพ">` : '<div class="w-full h-28 bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400">ไม่มีรูป</div>'}
                             </div>
                             <div>
-                                <p class="text-[10px] text-emerald-600 font-semibold mb-1">รูปหลังซ่อมเสร็จ</p>
-                                ${item.resolution_image_url ? `<img src="${item.resolution_image_url}" class="w-full h-28 object-cover rounded-lg border border-emerald-200">` : '<div class="w-full h-28 bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400">ไม่มีรูป</div>'}
+                                <p class="text-[10px] text-emerald-600 font-semibold mb-1">รูปหลังซ่อมเสร็จ (คลิกดูภาพใหญ่)</p>
+                                ${item.resolution_image_url ? `<img src="${item.resolution_image_url}" onclick="openImageModal('${item.resolution_image_url}')" class="w-full h-28 object-cover rounded-lg border border-emerald-200 cursor-pointer hover:opacity-90 transition shadow-sm" title="คลิกเพื่อขยายภาพ">` : '<div class="w-full h-28 bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400">ไม่มีรูป</div>'}
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        // ฟังก์ชันจัดการ Modal ขยายภาพ
+        function openImageModal(url) {
+            const modal = document.getElementById('imageModal');
+            const imgEl = document.getElementById('zoomableImage');
+            imgEl.src = url;
+            currentScale = 1;
+            posX = 0;
+            posY = 0;
+            updateTransform();
+            modal.classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        function zoomIn() {
+            if (currentScale < 5) {
+                currentScale += 0.5;
+                updateTransform();
+            }
+        }
+
+        function zoomOut() {
+            if (currentScale > 1) {
+                currentScale -= 0.5;
+                if (currentScale === 1) {
+                    posX = 0;
+                    posY = 0;
+                }
+                updateTransform();
+            }
+        }
+
+        function resetZoom() {
+            currentScale = 1;
+            posX = 0;
+            posY = 0;
+            updateTransform();
         }
 
         function resetFilter() {
