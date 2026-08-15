@@ -10,11 +10,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Prompt', sans-serif; }</style>
 </head>
-<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen py-10 px-4 flex items-center justify-center">
-    <div class="max-w-4xl w-full space-y-8">
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen py-10 px-4 flex items-center justify-center relative">
+    <div class="max-w-4xl w-full space-y-6">
         
-        <!-- ส่วนหัวข้อและโลโก้ -->
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 text-center space-y-4">
+        <!-- ส่วนหัวข้อและโลโก้ พร้อมกระดิ่งมุมขวาบน -->
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 text-center space-y-4 relative">
+            
+            <!-- 🔔 ปุ่มกระดิ่งแจ้งเตือน (มุมขวาบน) -->
+            <div class="absolute top-6 right-6">
+                <button onclick="toggleNotificationPopup()" id="bellButton" class="relative bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-2xl shadow-sm transition flex items-center justify-center text-xl focus:outline-none">
+                    🔔
+                    <span id="bellBadge" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black w-5 h-5 rounded-full items-center justify-center border-2 border-white shadow animate-bounce">!</span>
+                </button>
+
+                <!-- Popup แสดงรายละเอียดการแจ้งเตือน -->
+                <div id="notificationPopup" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 text-left">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+                        <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                            <span>🔔</span> การแจ้งเตือนเรื่องร้องเรียน
+                        </h4>
+                        <button onclick="toggleNotificationPopup()" class="text-slate-400 hover:text-slate-600 text-xs font-bold">✕</button>
+                    </div>
+                    <div id="popupContent" class="space-y-2">
+                        <p class="text-xs text-slate-500">กำลังตรวจสอบข้อมูล...</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex justify-center">
                 <img src="warincityLogo.png" alt="โลโก้เทศบาลเมืองวารินชำราบ" class="w-24 h-24 object-contain rounded-full shadow-md border-2 border-slate-100 p-1">
             </div>
@@ -63,7 +85,7 @@
                 </div>
             </a>
 
-            <!-- 4. ระบบมอบหมายงาน (เพิ่มใหม่) -->
+            <!-- 4. ระบบมอบหมายงาน -->
             <a href="assign-tags.html" class="group bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-sky-500 hover:shadow-md transition flex flex-col justify-between space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="text-3xl p-3 bg-sky-50 rounded-xl group-hover:bg-sky-600 group-hover:text-white transition">🏷️</span>
@@ -130,5 +152,94 @@
             © 2026 เทศบาลเมืองวารินชำราบ จังหวัดอุบลราชธานี — ระบบสารสนเทศเพื่อการบริหารจัดการ
         </div>
     </div>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://idgojpyhowjjphhanljt.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function toggleNotificationPopup() {
+            const popup = document.getElementById('notificationPopup');
+            popup.classList.toggle('hidden');
+        }
+
+        // ปิด Popup เมื่อคลิกพื้นที่นอกเหนือจากปุ่มกระดิ่งและตัว Popup
+        window.addEventListener('click', function(e) {
+            const bellButton = document.getElementById('bellButton');
+            const popup = document.getElementById('notificationPopup');
+            if (!bellButton.contains(e.target) && !popup.contains(e.target)) {
+                popup.classList.add('hidden');
+            }
+        });
+
+        async function checkUrgentComplaints() {
+            try {
+                const { data, error } = await _supabase
+                    .from('complaints')
+                    .select('created_at, status');
+
+                if (error) {
+                    console.error("Error fetching complaints:", error);
+                    return;
+                }
+
+                if (!data) return;
+
+                const now = new Date();
+                let urgentCount = 0;
+
+                data.forEach(item => {
+                    if (item.status !== 'resolved' && item.created_at) {
+                        const createdDate = new Date(item.created_at);
+                        const diffTime = now - createdDate;
+                        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+                        if (diffDays >= 15) {
+                            urgentCount++;
+                        }
+                    }
+                });
+
+                const bellBadgeEl = document.getElementById('bellBadge');
+                const popupContentEl = document.getElementById('popupContent');
+
+                if (urgentCount > 0) {
+                    bellBadgeEl.textContent = "!";
+                    bellBadgeEl.classList.remove('hidden');
+                    bellBadgeEl.classList.add('flex');
+
+                    popupContentEl.innerHTML = `
+                        <div class="p-2 bg-amber-50 rounded-xl border border-amber-200">
+                            <p class="text-xs font-bold text-amber-800">มี ${urgentCount} เรื่องที่ต้องเร่งดำเนินการ</p>
+                            <p class="text-[11px] text-amber-600 mt-0.5">มีคำร้องค้างเกิน 15 วัน ควรเร่งตรวจสอบและปิดงาน</p>
+                        </div>
+                        <a href="admin-panel.html" class="block w-full text-center bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-2 rounded-xl transition shadow-sm mt-2">
+                            ไปที่หน้าจัดการคำร้อง &rarr;
+                        </a>
+                    `;
+                } else {
+                    bellBadgeEl.classList.add('hidden');
+                    bellBadgeEl.classList.remove('flex');
+
+                    popupContentEl.innerHTML = `
+                        <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                            <p class="text-xs font-medium text-slate-600">สถานะระบบปกติ</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">ไม่มีเรื่องค้างดำเนินการเกิน 15 วัน</p>
+                        </div>
+                        <a href="admin-panel.html" class="block w-full text-center bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2 rounded-xl transition shadow-sm mt-2">
+                            จัดการคำร้องทั้งหมด &rarr;
+                        </a>
+                    `;
+                }
+
+            } catch (err) {
+                console.error("Unexpected error:", err);
+            }
+        }
+
+        checkUrgentComplaints();
+    </script>
 </body>
 </html>
