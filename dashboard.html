@@ -48,6 +48,22 @@
             </select>
         </div>
 
+        <!-- ส่วนสรุปข้อมูล (KPI Cards) -->
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-blue-50 border border-blue-200 p-3.5 rounded-xl text-center shadow-sm">
+                <p class="text-[11px] text-blue-600 font-bold uppercase tracking-wider">ข้อร้องเรียนทั้งหมด</p>
+                <p id="kpiTotal" class="text-2xl font-bold text-blue-900 mt-1">0</p>
+            </div>
+            <div class="bg-green-50 border border-green-200 p-3.5 rounded-xl text-center shadow-sm">
+                <p class="text-[11px] text-green-600 font-bold uppercase tracking-wider">ดำเนินการเสร็จ</p>
+                <p id="kpiDone" class="text-2xl font-bold text-green-900 mt-1">0</p>
+            </div>
+            <div class="bg-purple-50 border border-purple-200 p-3.5 rounded-xl text-center shadow-sm">
+                <p class="text-[11px] text-purple-600 font-bold uppercase tracking-wider">ร้อยละที่แล้วเสร็จ</p>
+                <p id="kpiPercent" class="text-2xl font-bold text-purple-900 mt-1">0%</p>
+            </div>
+        </div>
+
         <!-- กราฟแสดงสถิติตามช่วงเวลา (รายวัน / รายเดือน) -->
         <div class="pb-4">
             <p class="text-sm font-bold text-slate-600 mb-2" id="trendTitle">สถิติจำนวนเรื่องร้องเรียนตามช่วงเวลา</p>
@@ -235,6 +251,20 @@
                 const matchCommunity = !community || (i.community && normalizeStr(i.community) === normalizeStr(community));
                 return matchMonth && matchYear && matchCommunity;
             });
+
+            // --- คำนวณและอัปเดตข้อมูลส่วน KPI Summary (นับทุกงานที่ไม่ใช่สถานะรอดำเนินการ เพื่อให้ตรงกับหมุดสีเขียวบนแผนที่) ---
+            const totalCount = filtered.length;
+            const completedCount = filtered.filter(i => {
+                if (i.status === undefined || i.status === null) return false;
+                const s = i.status.toString().trim().toLowerCase();
+                // นับว่าเป็นงานเสร็จสิ้นถ้าสถานะไม่ใช่ pending/รอ/รอดำเนินการ
+                return s !== 'pending' && s !== 'รอ' && s !== 'รอดำเนินการ' && s !== 'false' && s !== '0' && s !== '';
+            }).length;
+            const percentCompleted = totalCount > 0 ? ((completedCount / totalCount) * 100).toFixed(1) : 0;
+
+            document.getElementById('kpiTotal').innerText = totalCount.toLocaleString();
+            document.getElementById('kpiDone').innerText = completedCount.toLocaleString();
+            document.getElementById('kpiPercent').innerText = percentCompleted + '%';
 
             // --- 1. Render Trend Chart ---
             let trendLabels = [];
