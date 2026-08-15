@@ -103,30 +103,32 @@
                 <textarea id="description" rows="2" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm bg-slate-50/50" placeholder="ระบุจุดสังเกตุหรือรายละเอียดเพิ่มเติม เช่นบ้านเลขที่ ถนน หรือจุดร้องเรียน"></textarea>
             </div>
 
-            <!-- ส่วนพิกัด GPS -->
-            <div class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-2.5">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-                    <label class="block text-xs md:text-sm font-semibold text-blue-900">📍 พิกัดจุดเกิดเหตุ (GPS) <span class="text-red-500">*</span></label>
-                    <div class="flex flex-wrap gap-1.5">
-                        <button type="button" onclick="openMapModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-xl transition shadow-sm">
-                            🗺️ ปักหมุดแผนที่
+            <!-- ส่วนพิกัด GPS (เปลี่ยนหัวข้อ และซ่อนกรอบพิกัดให้เป็นข้อความเรียบง่าย) -->
+            <div class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-2">
+                <div>
+                    <label class="block text-xs md:text-sm font-semibold text-blue-900 mb-2">📍 เลือกวิธีระบุจุดที่ร้องเรียน <span class="text-red-500">*</span></label>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="openMapModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition shadow-sm flex items-center gap-1">
+                            🗺️ ปักหมุดบนแผนที่
                         </button>
-                        <button type="button" onclick="getLocation()" class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-xl transition shadow-sm">
+                        <button type="button" onclick="getLocation()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition shadow-sm flex items-center gap-1">
                             📍 ดึงพิกัดอัตโนมัติ
                         </button>
+                        <button type="button" onclick="openManualModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition shadow-sm flex items-center gap-1">
+                            ⌨️ กรอกพิกัด GPS
+                        </button>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block text-[11px] text-slate-500 mb-0.5">ละติจูด (Latitude) *</label>
-                        <input type="number" step="any" id="latitude" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="เช่น 15.1934">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] text-slate-500 mb-0.5">ลองจิจูด (Longitude) *</label>
-                        <input type="number" step="any" id="longitude" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="เช่น 104.8715">
-                    </div>
+
+                <!-- ซ่อน Input กรอบพิกัด เปลี่ยนเป็นข้อความสถานะตัวเล็กๆ -->
+                <div class="pt-1 flex items-center justify-between text-xs text-slate-500">
+                    <span>สถานะพิกัด: <strong id="coordStatusText" class="text-amber-600 font-medium">ยังไม่ได้ระบุพิกัด</strong></span>
                 </div>
-                <p class="text-[10px] text-slate-400">* สามารถปักหมุดแผนที่, ดึงพิกัดอัตโนมัติ หรือพิมพ์/วางค่าพิกัดลงในช่องได้</p>
+                <!-- Hidden inputs สำหรับเก็บค่าส่ง Backend ตามเดิม -->
+                <input type="hidden" id="latitude" required>
+                <input type="hidden" id="longitude" required>
+
+                <p class="text-[10px] text-slate-400">* กรุณาเลือกวิธีระบุพิกัดจากปุ่มด้านบน ระบบจะบันทึกค่าพิกัดให้อัตโนมัติ</p>
             </div>
 
             <div>
@@ -163,6 +165,33 @@
         </div>
     </div>
 
+    <!-- Modal สำหรับกรอกพิกัด GPS ด้วยมือ -->
+    <div id="manualModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
+                    ⌨️ กรอกพิกัด GPS
+                </h3>
+                <button type="button" onclick="closeManualModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold px-2">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-500">กรุณากรอกค่าพิกัดละติจูดและลองจิจูดของจุดเกิดเหตุ</p>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">ละติจูด (Latitude) *</label>
+                    <input type="number" step="any" id="manualLatitude" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-purple-600" placeholder="เช่น 15.1934">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">ลองจิจูด (Longitude) *</label>
+                    <input type="number" step="any" id="manualLongitude" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-purple-600" placeholder="เช่น 104.8715">
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
+                <button type="button" onclick="closeManualModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-medium transition">ยกเลิก</button>
+                <button type="button" onclick="confirmManualLocation()" class="px-4.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-medium transition shadow-sm">ยืนยันพิกัด</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -176,16 +205,23 @@
         let tempLat = 15.1934; // ค่าเริ่มต้นอำเภอวารินชำราบ
         let tempLng = 104.8715;
 
+        function updateCoordDisplay(lat, lng) {
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            const statusEl = document.getElementById('coordStatusText');
+            statusEl.textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+            statusEl.className = "text-emerald-600 font-semibold";
+        }
+
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        document.getElementById('latitude').value = position.coords.latitude;
-                        document.getElementById('longitude').value = position.coords.longitude;
+                        updateCoordDisplay(position.coords.latitude, position.coords.longitude);
                         alert('ดึงพิกัดปัจจุบันสำเร็จ!');
                     },
                     (error) => {
-                        alert('ไม่สามารถดึงพิกัดได้: ' + error.message + '\n(คุณสามารถพิมพ์พิกัดหรือปักหมุดแผนที่ได้)');
+                        alert('ไม่สามารถดึงพิกัดได้: ' + error.message + '\n(โปรดใช้ปุ่มปักหมุดแผนที่หรือกรอกพิกัดแทน)');
                     }
                 );
             } else {
@@ -197,7 +233,6 @@
         function openMapModal() {
             document.getElementById('mapModal').classList.remove('hidden');
             
-            // ดึงค่าปัจจุบันจากช่อง input ถ้ามี
             const currentLat = parseFloat(document.getElementById('latitude').value);
             const currentLng = parseFloat(document.getElementById('longitude').value);
             
@@ -206,7 +241,6 @@
                 tempLng = currentLng;
             }
 
-            // หน่วงเวลาเล็กน้อยเพื่อให้ Modal แสดงผลสมบูรณ์ก่อนโหลด Map
             setTimeout(() => {
                 if (!map) {
                     map = L.map('map').setView([tempLat, tempLng], 14);
@@ -217,13 +251,11 @@
 
                     marker = L.marker([tempLat, tempLng], { draggable: true }).addTo(map);
 
-                    // อัปเดตพิกัดเมื่อลากหมุด
                     marker.on('dragend', function (e) {
                         const pos = marker.getLatLng();
                         updateSelectedCoords(pos.lat, pos.lng);
                     });
 
-                    // คลิกบนแผนที่เพื่อย้ายหมุด
                     map.on('click', function (e) {
                         marker.setLatLng(e.latlng);
                         updateSelectedCoords(e.latlng.lat, e.latlng.lng);
@@ -243,16 +275,39 @@
             document.getElementById('selectedCoordsText').textContent = `📍 พิกัดที่เลือก: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
         }
 
-        // ปิด Modal แผนที่
         function closeMapModal() {
             document.getElementById('mapModal').classList.add('hidden');
         }
 
-        // ยืนยันพิกัดจากแผนที่ใส่ลงช่อง input หลัก
         function confirmMapLocation() {
-            document.getElementById('latitude').value = tempLat.toFixed(6);
-            document.getElementById('longitude').value = tempLng.toFixed(6);
+            updateCoordDisplay(tempLat, tempLng);
             closeMapModal();
+        }
+
+        // จัดการ Modal กรอกพิกัดด้วยมือ (Manual Modal)
+        function openManualModal() {
+            const currentLat = document.getElementById('latitude').value;
+            const currentLng = document.getElementById('longitude').value;
+            document.getElementById('manualLatitude').value = currentLat || '';
+            document.getElementById('manualLongitude').value = currentLng || '';
+            document.getElementById('manualModal').classList.remove('hidden');
+        }
+
+        function closeManualModal() {
+            document.getElementById('manualModal').classList.add('hidden');
+        }
+
+        function confirmManualLocation() {
+            const mLat = parseFloat(document.getElementById('manualLatitude').value);
+            const mLng = parseFloat(document.getElementById('manualLongitude').value);
+
+            if (isNaN(mLat) || isNaN(mLng)) {
+                alert('กรุณากรอกค่าละติจูดและลองจิจูดให้ถูกต้องครบถ้วน');
+                return;
+            }
+
+            updateCoordDisplay(mLat, mLng);
+            closeManualModal();
         }
 
         async function submitComplaint(e) {
@@ -275,6 +330,11 @@
 
             if (!community) {
                 alert('โปรดระบุชุมชนที่เกิดเหตุร้องเรียน');
+                return;
+            }
+
+            if (isNaN(latitude) || isNaN(longitude)) {
+                alert('กรุณาระบุพิกัดจุดที่ร้องเรียนด้วยวิธีใดวิธีหนึ่ง');
                 return;
             }
 
@@ -325,6 +385,8 @@
 
                 alert('ส่งเรื่องร้องเรียนสำเร็จแล้ว!');
                 document.getElementById('complaintForm').reset();
+                document.getElementById('coordStatusText').textContent = "ยังไม่ได้ระบุพิกัด";
+                document.getElementById('coordStatusText').className = "text-amber-600 font-medium";
 
             } catch (err) {
                 console.error(err);
