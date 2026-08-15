@@ -13,18 +13,20 @@
 <body class="bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100 min-h-screen py-8 px-4 flex items-center justify-center">
     <div class="max-w-xl w-auto mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-blue-100">
         
-        <!-- ส่วนหัวข้อ พร้อมโลโก้เทศบาลด้านซ้าย และปุ่มติดตามเรื่องร้องเรียนที่มุมขวาบน -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-100">
+        <!-- ส่วนหัวข้อ พร้อมโลโก้ด้านซ้าย และปุ่มติดตามเรื่องร้องเรียนชิดขวาด้านบน -->
+        <div class="mb-6 pb-4 border-b border-slate-100">
+            <div class="flex justify-end mb-2">
+                <a href="track-complaint.html" class="bg-amber-500 hover:bg-amber-600 text-white font-medium text-xs py-1.5 px-3 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                    🔍 ติดตามสถานะคำร้อง
+                </a>
+            </div>
             <div class="flex items-center gap-4">
                 <img src="warincityLogo.png" alt="โลโก้เทศบาลเมืองวารินชำราบ" class="w-16 h-16 object-contain rounded-full shadow-md border-2 border-blue-600 p-0.5 bg-white shrink-0">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-blue-900">📝 ระบบแจ้งเรื่องร้องเรียนออนไลน์</h1>
+                    <h1 class="text-xl md:text-2xl font-bold text-blue-900 whitespace-nowrap">📝 ระบบแจ้งเรื่องร้องเรียนออนไลน์</h1>
                     <p class="text-xs md:text-sm text-slate-500 mt-0.5">เทศบาลเมืองวารินชำราบ จังหวัดอุบลราชธานี</p>
                 </div>
             </div>
-            <a href="track-complaint.html" class="bg-amber-500 hover:bg-amber-600 text-white font-medium text-xs py-2 px-3.5 rounded-xl transition flex items-center gap-1.5 shadow-sm shrink-0">
-                🔍 ติดตามสถานะคำร้อง
-            </a>
         </div>
 
         <form id="complaintForm" class="space-y-4" onsubmit="submitComplaint(event)">
@@ -52,14 +54,51 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs md:text-sm font-medium text-slate-700 mb-1">ชื่อ-นามสกุล ผู้แจ้ง</label>
-                <input type="text" id="reporter_name" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm bg-slate-50/50" placeholder="ระบุชื่อของคุณ">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs md:text-sm font-medium text-slate-700 mb-1">ชื่อ-นามสกุล ผู้แจ้ง <span class="text-red-500">*</span></label>
+                    <input type="text" id="reporter_name" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm bg-slate-50/50" placeholder="ระบุชื่อของคุณ">
+                </div>
+                <div>
+                    <label class="block text-xs md:text-sm font-medium text-slate-700 mb-1">ชุมชนที่เกิดเหตุ <span class="text-red-500">*</span></label>
+                    <select id="community" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm bg-slate-50/50 text-slate-700">
+                        <option value="" disabled selected>โปรดระบุชุมชนที่เกิดเหตุร้องเรียน</option>
+                        <option value="กุดปลาขาว">กุดปลาขาว</option>
+                        <option value="กุดเป่ง หมู่ 6">กุดเป่ง หมู่ 6</option>
+                        <option value="กุดเป่ง หมู่ 16">กุดเป่ง หมู่ 16</option>
+                        <option value="เกตุแก้ว">เกตุแก้ว</option>
+                        <option value="คำน้ำแซ่บ">คำน้ำแซ่บ</option>
+                        <option value="คูยาง">คูยาง</option>
+                        <option value="ชลประทาน">ชลประทาน</option>
+                        <option value="ดอนงิ้ว">ดอนงิ้ว</option>
+                        <option value="ดีงาม">ดีงาม</option>
+                        <option value="ต้นแต้">ต้นแต้</option>
+                        <option value="ท่ากอไผ่">ท่ากอไผ่</option>
+                        <option value="ท่าบ้งมั่ง">ท่าบ้งมั่ง</option>
+                        <option value="บ้านสวนวาริน">บ้านสวนวาริน</option>
+                        <option value="บูรณะ">บูรณะ</option>
+                        <option value="ลับแล">ลับแล</option>
+                        <option value="วัดวารินทราราม">วัดวารินทราราม</option>
+                        <option value="วัดผาสุการาม">วัดผาสุการาม</option>
+                        <option value="สุขสำราญ">สุขสำราญ</option>
+                        <option value="แสนสำราญ">แสนสำราญ</option>
+                        <option value="หนองกอก">หนองกอก</option>
+                        <option value="หนองตาโผ่น">หนองตาโผ่น</option>
+                        <option value="หนองบก">หนองบก</option>
+                        <option value="หาดสวนยา">หาดสวนยา</option>
+                        <option value="หาดสวนสุข">หาดสวนสุข</option>
+                        <option value="หาดสวนสุข 1">หาดสวนสุข 1</option>
+                        <option value="ห้าแยก">ห้าแยก</option>
+                        <option value="แหลมทอง">แหลมทอง</option>
+                        <option value="อยู่เย็น">อยู่เย็น</option>
+                        <option value="ไม่ทราบ หรือ ไม่สามารถระบุได้">ไม่ทราบ หรือ ไม่สามารถระบุได้</option>
+                    </select>
+                </div>
             </div>
 
             <div>
-                <label class="block text-xs md:text-sm font-medium text-slate-700 mb-1">รายละเอียดเพิ่มเติม</label>
-                <textarea id="description" rows="2" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm bg-slate-50/50" placeholder="ระบุจุดสังเกตุหรือรายละเอียดเพิ่มเติม เช่นบ้านเลขที่ ถนน ชุมชน ของท่านหรือจุดร้องเรียน"></textarea>
+                <label class="block text-xs md:text-sm font-medium text-slate-700 mb-1">รายละเอียดเพิ่มเติม <span class="text-red-500">*</span></label>
+                <textarea id="description" rows="2" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-sm bg-slate-50/50" placeholder="ระบุจุดสังเกตุหรือรายละเอียดเพิ่มเติม เช่นบ้านเลขที่ ถนน หรือจุดร้องเรียน"></textarea>
             </div>
 
             <!-- ส่วนพิกัด GPS -->
@@ -84,8 +123,8 @@
             </div>
 
             <div>
-                <label class="block text-xs md:text-sm font-medium text-slate-700 mb-1">แนบรูปภาพปัญหา</label>
-                <input type="file" id="imageFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                <label class="block text-xs md:text-sm font-medium text-slate-700 mb-1">แนบรูปภาพปัญหา <span class="text-red-500">*</span></label>
+                <input type="file" id="imageFile" accept="image/*" required class="w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
             </div>
 
             <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition shadow-md shadow-blue-200 text-sm md:text-base">
@@ -124,6 +163,7 @@
             const category = document.getElementById('category').value;
             const reporter_phone = document.getElementById('reporter_phone').value;
             const reporter_name = document.getElementById('reporter_name').value;
+            const community = document.getElementById('community').value;
             const description = document.getElementById('description').value;
             const latitude = parseFloat(document.getElementById('latitude').value);
             const longitude = parseFloat(document.getElementById('longitude').value);
@@ -134,6 +174,16 @@
                 return;
             }
 
+            if (!community) {
+                alert('โปรดระบุชุมชนที่เกิดเหตุร้องเรียน');
+                return;
+            }
+
+            if (fileInput.files.length === 0) {
+                alert('กรุณาแนบรูปภาพปัญหา');
+                return;
+            }
+
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'กำลังส่งข้อมูล...';
@@ -141,23 +191,21 @@
             try {
                 let imageUrl = null;
 
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Date.now()}.${fileExt}`;
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}.${fileExt}`;
 
-                    const { error: uploadError } = await _supabase.storage
-                        .from('complaint-images')
-                        .upload(fileName, file);
+                const { error: uploadError } = await _supabase.storage
+                    .from('complaint-images')
+                    .upload(fileName, file);
 
-                    if (uploadError) throw uploadError;
+                if (uploadError) throw uploadError;
 
-                    const { data: publicURLData } = _supabase.storage
-                        .from('complaint-images')
-                        .getPublicUrl(fileName);
+                const { data: publicURLData } = _supabase.storage
+                    .from('complaint-images')
+                    .getPublicUrl(fileName);
 
-                    imageUrl = publicURLData.publicUrl;
-                }
+                imageUrl = publicURLData.publicUrl;
 
                 const { error: insertError } = await _supabase
                     .from('complaints')
@@ -166,6 +214,7 @@
                         category,
                         reporter_phone,
                         reporter_name,
+                        community,
                         description,
                         latitude,
                         longitude,
