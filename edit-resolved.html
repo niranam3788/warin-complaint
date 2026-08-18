@@ -61,7 +61,7 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 text-xs uppercase border-b border-slate-200">
-                            <th class="p-3.5">รหัส / วันที่แจ้ง</th>
+                            <th class="p-3.5">วันที่แจ้ง</th>
                             <th class="p-3.5">เรื่อง / ชุมชน</th>
                             <th class="p-3.5">หน่วยงาน (Tag)</th>
                             <th class="p-3.5">ข้อมูลการปิดงาน</th>
@@ -74,27 +74,53 @@
         </div>
     </main>
 
-    <!-- Modal -->
+    <!-- Modal: Edit -->
     <div id="editModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3"><h3 class="font-bold text-lg">🛠️ แก้ไขข้อมูลการปิดงาน</h3><button onclick="closeEditModal()" class="text-xl">&times;</button></div>
             <form id="editForm" onsubmit="saveEditedResolved(event)" class="space-y-4">
                 <input type="hidden" id="editId">
                 <div class="bg-slate-50 p-3 rounded-lg text-xs text-slate-600 space-y-1">
-                    <p><strong>รหัสเรื่อง:</strong> <span id="lblTracking">-</span></p>
+                    <p><strong>รหัสเรื่อง (ID):</strong> <span id="lblTracking">-</span></p>
                     <p><strong>หัวข้อปัญหา:</strong> <span id="lblTopic">-</span></p>
                 </div>
                 <div><label class="block text-xs font-semibold mb-1">วันที่ที่ปิดงาน</label><input type="datetime-local" id="editResolvedDate" required class="w-full border rounded-lg px-3 py-2"></div>
                 <div><label class="block text-xs font-semibold mb-1">ข้อความปิดงาน</label><textarea id="editResolvedNote" rows="3" required class="w-full border rounded-lg px-3 py-2"></textarea></div>
-                <div><label class="block text-xs font-semibold mb-1">รูปถ่ายผลงาน (แนบใหม่)</label><input type="file" id="editResolvedImageFile" accept="image/*" class="w-full text-xs"></div>
-                <div class="flex justify-end gap-2"><button type="button" onclick="closeEditModal()" class="px-4 py-2 text-sm bg-slate-100 rounded-lg">ยกเลิก</button><button type="submit" id="btnSave" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">บันทึก</button></div>
+                
+                <div id="oldImageContainer">
+                    <label class="block text-xs font-semibold mb-1">รูปถ่ายผลงานเดิม</label>
+                    <div id="oldImagePreview" class="border p-2 rounded-lg bg-slate-50 text-center">กำลังโหลด...</div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold mb-1">แนบรูปถ่ายใหม่ (แทนที่รูปเดิม)</label>
+                    <input type="file" id="editResolvedImageFile" accept="image/*" class="w-full text-xs" onchange="checkImageUpdate()">
+                    <div id="imageWarning" class="hidden mt-2 p-2 bg-amber-50 text-amber-700 text-[11px] rounded border border-amber-200">
+                        ⚠️ <strong>แจ้งเตือน :</strong> การบันทึกภาพผลการดำเนินการใหม่จะบันทึกทับรูปเดิม ทำให้รูปเดิมสูญหาย
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-sm bg-slate-100 rounded-lg">ยกเลิก</button>
+                    <button type="submit" id="btnSave" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">บันทึก</button>
+                </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal: Image Preview Popup -->
+    <div id="imageModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4" onclick="closeImageModal()">
+        <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
+            <button onclick="closeImageModal()" class="absolute -top-10 right-0 text-white text-3xl font-bold hover:text-slate-300 transition">&times;</button>
+            <img id="modalImageContent" src="" alt="รูปขยาย" class="max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain border border-slate-700">
+            <p class="text-white text-xs mt-3 bg-black/60 px-4 py-1.5 rounded-full">คลิกที่ว่างหรือปุ่ม X ด้านบนเพื่อปิด</p>
         </div>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://idgojpyhowjjphhanljt.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_3gL-lEkHS1u6j34kL8nufQ_gHl8YFs2';
+        const STORAGE_BUCKET = 'complaint-images';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let allResolvedData = [];
 
@@ -107,14 +133,51 @@
             fetchResolvedComplaints();
         });
 
-        async function fetchResolvedComplaints() {
-            const { data, error } = await supabaseClient.from('complaints').select('*').eq('status', 'resolved').order('resolved_at', { ascending: false });
-            if (error) {
-                console.error(error);
-                return;
+        function checkImageUpdate() {
+            const fileInput = document.getElementById('editResolvedImageFile');
+            const warningDiv = document.getElementById('imageWarning');
+            if (fileInput.files.length > 0) {
+                warningDiv.classList.remove('hidden');
+            } else {
+                warningDiv.classList.add('hidden');
             }
-            allResolvedData = data || [];
-            renderTable(allResolvedData);
+        }
+
+        function getResolvedImageUrl(item) {
+            const rawVal = item.resolution_image_url || item.resolution_image || item.image_url || item.image || item.photo || item.img || null;
+            if (!rawVal) return null;
+            if (rawVal.startsWith('http')) return rawVal;
+            const { data } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(rawVal);
+            return data ? data.publicUrl : null;
+        }
+
+        function openImageModal(url) {
+            document.getElementById('modalImageContent').src = url;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+            document.getElementById('modalImageContent').src = '';
+        }
+
+        async function fetchResolvedComplaints() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('complaints')
+                    .select('*')
+                    .eq('status', 'resolved')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allResolvedData = data || [];
+                renderTable(allResolvedData);
+            } catch (err) {
+                console.error("Supabase Error:", err);
+                document.getElementById('resolvedTableBody').innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-500 font-medium">เกิดข้อผิดพลาดในการโหลดข้อมูล: ${err.message}</td></tr>`;
+                document.getElementById('resultCount').innerText = 'โหลดไม่สำเร็จ';
+            }
         }
 
         function renderTable(data) {
@@ -127,27 +190,28 @@
             }
 
             tbody.innerHTML = data.map(item => {
-                const trackingNo = item.tracking_no || item.id;
-                const createdDate = item.timestamp ? new Date(item.timestamp).toLocaleDateString('th-TH') : '-';
-                const topicText = item.title || item.topic || 'ไม่มีหัวข้อ';
+                const createdDate = item.created_at ? new Date(item.created_at).toLocaleDateString('th-TH') : '-';
+                const topicText = item.title || 'ไม่มีหัวข้อ';
                 const communityText = item.community || 'ไม่ระบุชุมชน';
-                
-                // จัดการแปลง department_tags (รองรับกรณีมีหลายหน่วยงานคั่นด้วยจุลภาค)
                 const deptRaw = item.department_tags || '';
-                const deptTagsHtml = deptRaw 
-                    ? deptRaw.split(',').map(d => `<span class="dept-tag">${d.trim()}</span>`).join('') 
-                    : '<span class="text-slate-400 text-xs">ไม่ระบุ</span>';
+                const deptTagsHtml = deptRaw ? deptRaw.split(',').map(d => `<span class="dept-tag">${d.trim()}</span>`).join('') : '<span class="text-slate-400 text-xs">ไม่ระบุ</span>';
 
-                const resolvedDateFormatted = item.resolved_at ? new Date(item.resolved_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-';
-                const noteText = item.resolved_note || '-';
-                const imgThumb = item.resolved_image ? `<a href="${item.resolved_image}" target="_blank" class="text-blue-600 underline text-xs">ดูรูปภาพ</a>` : '<span class="text-slate-400 text-xs">ไม่มีรูป</span>';
+                const resolvedDateFormatted = item.resolved_at ? new Date(item.resolved_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '<span class="text-slate-400">ยังไม่ระบุเวลา</span>';
+                const noteText = item.resolution_note ? item.resolution_note : '<span class="text-slate-400 italic">ไม่มีข้อความปิดงาน</span>';
+                
+                const imgUrl = getResolvedImageUrl(item);
+                const imgThumb = imgUrl ? `<button onclick="openImageModal('${imgUrl}')" class="text-blue-600 hover:underline text-xs inline-flex items-center gap-1 font-medium mt-1 text-left">🖼️ ดูรูปเดิม</button>` : '<span class="text-slate-400 text-xs italic">ไม่มีรูป</span>';
 
                 return `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                        <td class="p-3.5"><span class="font-bold text-slate-900">${trackingNo}</span><div class="text-xs text-slate-500">แจ้ง: ${createdDate}</div></td>
+                        <td class="p-3.5"><div class="text-slate-700 font-medium">${createdDate}</div></td>
                         <td class="p-3.5"><div class="font-medium text-slate-800">${topicText}</div><div class="text-xs text-slate-500">ชุมชน: ${communityText}</div></td>
                         <td class="p-3.5"><div>${deptTagsHtml}</div></td>
-                        <td class="p-3.5 text-xs text-slate-600"><div><strong>ปิดเมื่อ:</strong> ${resolvedDateFormatted}</div><div class="truncate max-w-xs"><strong>ข้อความ:</strong> ${noteText}</div><div>${imgThumb}</div></td>
+                        <td class="p-3.5 text-xs text-slate-600 space-y-0.5">
+                            <div><strong>ปิดเมื่อ:</strong> ${resolvedDateFormatted}</div>
+                            <div><strong>ข้อความ:</strong> ${noteText}</div>
+                            <div>${imgThumb}</div>
+                        </td>
                         <td class="p-3.5 text-center"><button onclick="openEditModal('${item.id}')" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-md text-xs font-medium">แก้ไข</button></td>
                     </tr>
                 `;
@@ -163,12 +227,12 @@
 
             const filtered = allResolvedData.filter(item => {
                 const title = (item.title || '').toLowerCase();
-                const detail = (item.description || item.detail || '').toLowerCase();
-                const tracking = (item.tracking_no || '').toLowerCase();
-                const note = (item.resolved_note || '').toLowerCase();
+                const detail = (item.description || '').toLowerCase();
+                const idStr = (item.id || '').toLowerCase();
+                const note = (item.resolution_note || '').toLowerCase();
                 const deptTags = (item.department_tags || '').toLowerCase();
 
-                const matchKeyword = !keyword || tracking.includes(keyword) || title.includes(keyword) || detail.includes(keyword) || note.includes(keyword);
+                const matchKeyword = !keyword || idStr.includes(keyword) || title.includes(keyword) || detail.includes(keyword) || note.includes(keyword);
                 const matchCommunity = !community || item.community === community;
                 const matchDepartment = !department || deptTags.includes(department.toLowerCase());
 
@@ -201,7 +265,7 @@
             if (!item) return;
 
             document.getElementById('editId').value = item.id;
-            document.getElementById('lblTracking').innerText = item.tracking_no || item.id;
+            document.getElementById('lblTracking').innerText = item.id;
             document.getElementById('lblTopic').innerText = item.title || '-';
 
             if (item.resolved_at) {
@@ -212,8 +276,24 @@
                 document.getElementById('editResolvedDate').value = '';
             }
 
-            document.getElementById('editResolvedNote').value = item.resolved_note || '';
+            document.getElementById('editResolvedNote').value = item.resolution_note || '';
             document.getElementById('editResolvedImageFile').value = '';
+            document.getElementById('imageWarning').classList.add('hidden');
+            
+            const imgUrl = getResolvedImageUrl(item);
+            const preview = document.getElementById('oldImagePreview');
+            
+            if (imgUrl) {
+                preview.innerHTML = `
+                    <div class="space-y-2">
+                        <img src="${imgUrl}" alt="รูปเดิม" onclick="openImageModal('${imgUrl}')" class="max-h-32 mx-auto rounded border shadow-sm object-cover cursor-pointer hover:opacity-90 transition">
+                        <div><button type="button" onclick="openImageModal('${imgUrl}')" class="text-blue-600 text-xs underline font-medium">คลิกเพื่อดูรูปขนาดเต็ม</button></div>
+                    </div>
+                `;
+            } else {
+                preview.innerHTML = '<span class="text-slate-400 text-xs italic">ไม่มีรูปเดิม</span>';
+            }
+            
             document.getElementById('editModal').classList.remove('hidden');
         }
 
@@ -223,6 +303,10 @@
 
         async function saveEditedResolved(event) {
             event.preventDefault();
+            if (document.getElementById('editResolvedImageFile').files.length > 0) {
+                if (!confirm('แจ้งเตือน : การบันทึกภาพผลการดำเนินการใหม่จะบันทึกทับรูปเดิม ทำให้รูปเดิมสูญหาย คุณต้องการดำเนินการต่อหรือไม่?')) return;
+            }
+
             const id = document.getElementById('editId').value;
             const newDate = document.getElementById('editResolvedDate').value;
             const newNote = document.getElementById('editResolvedNote').value;
@@ -239,18 +323,22 @@
                     const fileName = `resolved_${Date.now()}.${fileExt}`;
                     const filePath = `resolved_images/${fileName}`;
 
-                    const { error: uploadError } = await supabaseClient.storage.from('complaints-bucket').upload(filePath, imageFile);
+                    const { error: uploadError } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(filePath, imageFile);
                     if (uploadError) throw uploadError;
 
-                    const { data: publicUrlData } = supabaseClient.storage.from('complaints-bucket').getPublicUrl(filePath);
+                    const { data: publicUrlData } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
                     imageUrl = publicUrlData.publicUrl;
                 }
 
                 const updatePayload = {
                     resolved_at: newDate ? new Date(newDate).toISOString() : null,
-                    resolved_note: newNote
+                    resolution_note: newNote,
+                    updated_at: new Date().toISOString()
                 };
-                if (imageUrl) updatePayload.resolved_image = imageUrl;
+                
+                if (imageUrl) {
+                    updatePayload.resolution_image_url = imageUrl;
+                }
 
                 const { error: updateError } = await supabaseClient.from('complaints').update(updatePayload).eq('id', id);
                 if (updateError) throw updateError;
