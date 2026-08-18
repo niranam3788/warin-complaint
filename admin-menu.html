@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบริหารจัดการ : ระบบร้องเรียน - เทศบาลเมืองวารินชำราบ</title>
+    <title>ระบบการบริหารจัดการ เรื่องร้องเรียนออนไลน์ - เทศบาลเมืองวารินชำราบ</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts (Prompt) -->
@@ -11,14 +11,14 @@
     <style>body { font-family: 'Prompt', sans-serif; }</style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen py-10 px-4 flex items-center justify-center relative">
-    <div class="max-w-4xl w-full space-y-6">
+    <div class="max-w-3xl w-full space-y-6">
         
-        <!-- ส่วนหัวข้อและโลโก้ พร้อมกระดิ่งมุมขวาบน -->
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 text-center space-y-4 relative">
+        <!-- ส่วนหัวข้อและโลโก้ พร้อมกระดิ่งแนวเดียวกับโลโก้ -->
+        <div class="bg-white px-8 py-6 rounded-3xl shadow-sm border border-slate-200 text-center space-y-3 relative">
             
-            <!-- 🔔 ปุ่มกระดิ่งแจ้งเตือน (มุมขวาบน) -->
+            <!-- 🔔 ปุ่มกระดิ่งแจ้งเตือน (ปรับตำแหน่งให้อยู่แนวเดียวกับโลโก้) -->
             <div class="absolute top-6 right-6">
-                <button onclick="toggleNotificationPopup()" id="bellButton" class="relative bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-2xl shadow-sm transition flex items-center justify-center text-xl focus:outline-none">
+                <button onclick="toggleNotificationPopup()" id="bellButton" class="relative bg-slate-100 hover:bg-slate-200 text-slate-700 p-2.5 rounded-2xl shadow-sm transition flex items-center justify-center text-lg focus:outline-none">
                     🔔
                     <span id="bellBadge" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black w-5 h-5 rounded-full items-center justify-center border-2 border-white shadow animate-bounce">!</span>
                 </button>
@@ -38,10 +38,10 @@
             </div>
 
             <div class="flex justify-center">
-                <img src="warincityLogo.png" alt="โลโก้เทศบาลเมืองวารินชำราบ" class="w-24 h-24 object-contain rounded-full shadow-md border-2 border-slate-100 p-1">
+                <img src="warincityLogo.png" alt="โลโก้เทศบาลเมืองวารินชำราบ" class="w-20 h-20 object-contain rounded-full shadow-md border-2 border-slate-100 p-1">
             </div>
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-slate-800">ระบบบริหารจัดการ : ระบบร้องเรียน</h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-800">ระบบการบริหารจัดการ เรื่องร้องเรียนออนไลน์</h1>
                 <p class="text-sm font-medium text-slate-500 mt-1">เทศบาลเมืองวารินชำราบ จังหวัดอุบลราชธานี</p>
             </div>
         </div>
